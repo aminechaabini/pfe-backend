@@ -1,11 +1,7 @@
-package com.example.demo.project.infra;
+package com.example.demo.orchestrator.infra;
 
-import com.example.demo.project.domain.project.Project;
-import com.example.demo.project.domain.run.RunItem;
+import com.example.demo.orchestrator.domain.run.RunItem;
 import org.springframework.data.jpa.repository.JpaRepository;
-
-import java.util.List;
-import java.util.Optional;
 
 public interface RunItemRepository extends JpaRepository<RunItem, Long> {
 }

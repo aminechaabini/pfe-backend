@@ -1,6 +1,10 @@
 package com.example.demo.Runner;
 
+import com.example.demo.Runner.strategies.RestRunStrategy;
+import com.example.demo.Runner.strategies.RunStrategy;
+import com.example.demo.Runner.strategies.SoapRunStrategy;
 import com.example.demo.shared.events.AssertionResult;
+import com.example.demo.shared.events.Protocol;
 import com.example.demo.shared.events.RunRequest;
 
 import java.io.IOException;
@@ -8,57 +12,26 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Runner {
 
-    private static final HttpClient CLIENT = HttpClient.newBuilder().build();
+    private final Map<String, RunStrategy> strategies = new HashMap<>();
+
+    public Runner() {
+        strategies.put("REST", new RestRunStrategy());
+        strategies.put("SOAP", new SoapRunStrategy());
+    }
 
     public void run(RunRequest runRequest) {
 
-        String[] headers = runRequest.httpRequest().headers().entrySet().stream()
-                .flatMap(e -> java.util.stream.Stream.of(e.getKey(), e.getValue()))
-                .toArray(String[]::new);
-
-        byte[] body = runRequest.httpRequest().body();
-
-        boolean isNoBodyMethod = switch (runRequest.httpRequest().method().toUpperCase()) {
-            case "GET", "DELETE", "HEAD", "OPTIONS", "TRACE" -> true;
-            default -> false; // POST, PUT, PATCH, etc.
-        };
-
-        boolean hasBody = body != null && body.length > 0;
-
-
-        HttpRequest.BodyPublisher publisher = isNoBodyMethod
-                ? HttpRequest.BodyPublishers.noBody()
-                : (hasBody
-                ? HttpRequest.BodyPublishers.ofByteArray(body)
-                : HttpRequest.BodyPublishers.noBody());
-
-
-        HttpRequest httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create(runRequest.httpRequest().url()))
-                .headers(headers)
-                .method(runRequest.httpRequest().method(), publisher)
-                .build();
-
-        HttpResponse<String> getRes = null;
-        try {
-            getRes = CLIENT.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+        RunStrategy strategy = strategies.get(runRequest.protocol());
+        if (strategy == null) {
+            throw new IllegalArgumentException("Unsupported protocol: " + runRequest.protocol());
         }
-        System.out.println(getRes.statusCode());
-        System.out.println(getRes.body());
+        strategy.execute(runRequest);
 
-        List<AssertionResult> results =  JsonAssertionEngine.runAll(runRequest.assertions(), getRes.body(), getRes.statusCode());
-
-
-      // choose adapter
-      // execute test
-      // save results
     }
 }

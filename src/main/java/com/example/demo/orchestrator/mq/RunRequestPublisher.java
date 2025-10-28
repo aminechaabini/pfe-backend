@@ -1,4 +1,4 @@
-package com.example.demo.project.mq;
+package com.example.demo.orchestrator.mq;
 
 
 import org.springframework.kafka.core.KafkaTemplate;

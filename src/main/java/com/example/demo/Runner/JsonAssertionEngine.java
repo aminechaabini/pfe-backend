@@ -6,8 +6,8 @@ import org.assertj.core.api.Assertions;
 import java.util.ArrayList;
 import java.util.List;
 
-import static net.javacrumbs.jsonunit.JsonAssert.assertJsonEquals;
-import static net.javacrumbs.jsonunit.JsonAssert.assertJsonNodePresent;
+import static net.javacrumbs.jsonunit.JsonAssert.*;
+
 
 public class JsonAssertionEngine {
 
@@ -26,7 +26,7 @@ public class JsonAssertionEngine {
                         Assertions.assertThat(httpStatus).isEqualTo(expected);
                 }
                     case "jsonPathExists" -> assertJsonNodePresent(jsonBody, s.expr());
-                    case "jsonPathEquals" -> assertJsonEquals(s.expected(), jsonBody, s.expr());
+                    case "jsonPathEquals" -> assertJsonPartEquals(s.expected(), jsonBody, s.expr());
                     default -> throw new IllegalArgumentException("Unknown assertion type: " + s.type());
                 }
                 out.add(new AssertionResult(s, true, "OK"));

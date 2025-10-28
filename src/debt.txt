@@ -1,0 +1,2 @@
+- auto generated id where is it done here or in db?
+- dtos need to have required fields
