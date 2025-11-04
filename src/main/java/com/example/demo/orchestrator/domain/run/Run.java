@@ -24,17 +24,13 @@ public class Run {
 
   // --- Target: exactly one of these should be non-null (enforce in service layer) ---
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "suite_id")
-  private TestSuite suite;   // nullable
-
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "test_id")
-  private APITest test;      // nullable
+  @JoinColumn(name = "runnable_id")
+  private Runnable runnable;
 
   // --- Type/Status/Result: mapped as strings for stability ---
   @Enumerated(EnumType.STRING)
   @Column(name = "type", nullable = false)
-  private RunType type = RunType.SUITE; // default; set to TEST when test != null
+  private RunType type;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "status", nullable = false)
@@ -58,40 +54,16 @@ public class Run {
   private Instant completedAt;
 
   // --- Optimistic lock ---
-  @Version
-  @Column(name = "version", nullable = false)
-  private long version = 0L;
-
-  // --- Items within this run ---
-  @OneToMany(mappedBy = "run", orphanRemoval = false)
-  private List<RunItem> items = new ArrayList<>();
 
   protected Run() {}
 
-  private Run(TestSuite suite) {
-    this.suite = suite;
-    this.type = RunType.SUITE;
+  private Run(Runnable runnable) {
+    this.runnable = runnable;
+    this.type = runnable instanceof TestSuite ? RunType.SUITE : RunType.TEST;
     this.status = RunStatus.NOT_STARTED;
   }
 
-  private Run(APITest test) {
-    this.test = test;
-    this.type = RunType.TEST;
-    this.status = RunStatus.NOT_STARTED;
-  }
 
-  
-  // -------------------- Factories --------------------
-
-  public static Run forSuite(TestSuite suite) {
-    return new Run(suite);
-  }
-
-  public static Run forTest(APITest test) {
-    return new Run(test);
-  }
-
-  // -------------------- JPA lifecycle --------------------
   @PrePersist
   void onCreate() {
     Instant now = Instant.now();
@@ -107,13 +79,13 @@ public class Run {
   // -------------------- Getters/Setters --------------------
   public Long getId() { return id; }
 
-  public TestSuite getSuite() { return suite; }
-  public void setSuite(TestSuite suite) { this.suite = suite; }
+    public Runnable getRunnable() {
+        return runnable;
+    }
 
-  public APITest getTest() { return test; }
-  public void setTest(APITest test) { this.test = test; }
-
-  public RunType getType() { return type; }
+    public RunType getType() {
+        return type;
+    }
   public void setType(RunType type) { this.type = type; }
 
   public RunStatus getStatus() { return status; }
@@ -129,10 +101,6 @@ public class Run {
 
   public Instant getCompletedAt() { return completedAt; }
   public void setCompletedAt(Instant completedAt) { this.completedAt = completedAt; }
-
-  public long getVersion() { return version; }
-
-  public List<RunItem> getItems() { return items; }
 
   // keep equals/hashCode if you need them; omitted here to match your zip style
 }

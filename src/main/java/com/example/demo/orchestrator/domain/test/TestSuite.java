@@ -10,7 +10,7 @@ import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "test_suites", schema = "app")
-public class TestSuite {
+public class TestSuite implements Runnable{
 
     @Id
     @SequenceGenerator(

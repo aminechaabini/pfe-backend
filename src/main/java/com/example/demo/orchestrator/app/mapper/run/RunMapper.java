@@ -1,7 +1,6 @@
 package com.example.demo.orchestrator.app.mapper.run;
 
 import com.example.demo.orchestrator.domain.run.Run;
-import com.example.demo.orchestrator.domain.run.RunItem;
 import com.example.demo.orchestrator.domain.run.RunResult;
 import com.example.demo.orchestrator.domain.run.RunStatus;
 import com.example.demo.orchestrator.domain.test.APITest;
