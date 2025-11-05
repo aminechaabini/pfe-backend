@@ -1,7 +1,7 @@
 package com.example.demo.orchestrator.app.mapper.suite;
 
-import com.example.demo.orchestrator.domain.project.Project;
-import com.example.demo.orchestrator.domain.test.TestSuite;
+import com.example.demo.orchestrator.persistence.project.Project;
+import com.example.demo.orchestrator.persistence.test.TestSuite;
 import com.example.demo.orchestrator.dto.suite.CreateTestSuiteRequest;
 import com.example.demo.orchestrator.dto.suite.TestSuiteResponse;
 import com.example.demo.orchestrator.dto.suite.UpdateTestSuiteRequest;

@@ -9,7 +9,7 @@ import java.util.Optional;
 
 import com.example.demo.orchestrator.app.mapper.project.ProjectMapper;
 import com.example.demo.orchestrator.app.service.ProjectService;
-import com.example.demo.orchestrator.domain.project.Project;
+import com.example.demo.orchestrator.persistence.project.Project;
 import com.example.demo.orchestrator.dto.project.CreateProjectRequest;
 import com.example.demo.orchestrator.dto.project.UpdateProjectRequest;
 import com.example.demo.orchestrator.dto.project.ProjectResponse;

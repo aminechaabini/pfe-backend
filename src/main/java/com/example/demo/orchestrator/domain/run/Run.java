@@ -1,106 +1,100 @@
-
 package com.example.demo.orchestrator.domain.run;
 
-import com.example.demo.orchestrator.domain.test.APITest;
-import com.example.demo.orchestrator.domain.test.TestSuite;
-import jakarta.persistence.*;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
+import com.example.demo.orchestrator.domain.test.Runnable;
 
-@Entity
-@Table(name = "runs")
+import java.time.Instant;
+
 public class Run {
 
-  // --- Identity: switch to Long + SEQUENCE (consistent with other entities) ---
-  @Id
-  @SequenceGenerator(
-          name = "run_seq",                 // JPA generator name (local to this entity)
-          sequenceName = "app.run_seq",     // actual DB sequence (include schema!)
-          allocationSize = 50                   // fetch 50 ids at once (perf)
-  )
-  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "run_seq")
-  private Long id;
+    private Long id;
 
-  // --- Target: exactly one of these should be non-null (enforce in service layer) ---
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "runnable_id")
-  private Runnable runnable;
+    private Runnable runnable;
 
-  // --- Type/Status/Result: mapped as strings for stability ---
-  @Enumerated(EnumType.STRING)
-  @Column(name = "type", nullable = false)
-  private RunType type;
+    private RunStatus status = RunStatus.NOT_STARTED;
 
-  @Enumerated(EnumType.STRING)
-  @Column(name = "status", nullable = false)
-  private RunStatus status = RunStatus.NOT_STARTED;
+    private RunResult result; // null until completed/failed
 
-  @Enumerated(EnumType.STRING)
-  @Column(name = "result")
-  private RunResult result; // null until completed/failed
+    private Instant createdAt;
 
-  // --- Timing & audit: use Instant and snake_case column names ---
-  @Column(name = "created_at", nullable = false, updatable = false)
-  private Instant createdAt;
+    private Instant updatedAt;
 
-  @Column(name = "updated_at", nullable = false)
-  private Instant updatedAt;
+    private Instant startedAt;
 
-  @Column(name = "started_at")
-  private Instant startedAt;
+    private Instant completedAt;
 
-  @Column(name = "completed_at")
-  private Instant completedAt;
+    public Run(Runnable runnable){
+        this.runnable = runnable;
+        this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
+    }
 
-  // --- Optimistic lock ---
+    public void start() {
+        if (this.status == RunStatus.NOT_STARTED) {
+            this.status = RunStatus.IN_PROGRESS;
+            this.startedAt = Instant.now();
+            this.updatedAt = this.startedAt;
+        }
+        else {
+            throw new RuntimeException("Run is not in NOT_STARTED state");
+        }
+    }
 
-  protected Run() {}
+    public void complete() {
+        if (this.status == RunStatus.IN_PROGRESS) {
+            this.status = RunStatus.COMPLETED;
+            this.completedAt = Instant.now();
+            this.updatedAt = this.completedAt;
+        }
+        else {
+            throw new RuntimeException("Run is not in IN_PROGRESS state");
+        }
+    }
 
-  private Run(Runnable runnable) {
-    this.runnable = runnable;
-    this.type = runnable instanceof TestSuite ? RunType.SUITE : RunType.TEST;
-    this.status = RunStatus.NOT_STARTED;
-  }
+    public void fail() {
+        if (this.status == RunStatus.IN_PROGRESS) {
+        this.status = RunStatus.FAILED;
+        this.updatedAt = Instant.now();
+    }
+        else {
+            throw new RuntimeException("Run is not in IN_PROGRESS state");
+        }
+    }
 
-
-  @PrePersist
-  void onCreate() {
-    Instant now = Instant.now();
-    this.createdAt = now;
-    this.updatedAt = now;
-  }
-
-  @PreUpdate
-  void onUpdate() {
-    this.updatedAt = Instant.now();
-  }
-
-  // -------------------- Getters/Setters --------------------
-  public Long getId() { return id; }
+    public Long getId() {
+        return id;
+    }
 
     public Runnable getRunnable() {
         return runnable;
     }
 
-    public RunType getType() {
-        return type;
+    public RunStatus getStatus() {
+        return status;
     }
-  public void setType(RunType type) { this.type = type; }
 
-  public RunStatus getStatus() { return status; }
-  public void setStatus(RunStatus status) { this.status = status; }
+    public RunResult getResult() {
+        return result;
+    }
 
-  public RunResult getResult() { return result; }
-  public void setResult(RunResult result) { this.result = result; }
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
 
-  public Instant getCreatedAt() { return createdAt; }
-  public Instant getUpdatedAt() { return updatedAt; }
-  public Instant getStartedAt() { return startedAt; }
-  public void setStartedAt(Instant startedAt) { this.startedAt = startedAt; }
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
 
-  public Instant getCompletedAt() { return completedAt; }
-  public void setCompletedAt(Instant completedAt) { this.completedAt = completedAt; }
+    public Instant getStartedAt() {
+        return startedAt;
+    }
 
-  // keep equals/hashCode if you need them; omitted here to match your zip style
+    public Instant getCompletedAt() {
+        return completedAt;
+    }
+
+    public void setResult(RunResult result) {
+        this.result = result;
+    }
 }
+
+

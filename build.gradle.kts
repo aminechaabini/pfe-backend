@@ -22,7 +22,7 @@ dependencies {
     implementation("org.assertj:assertj-core:3.26.0")
     implementation("net.javacrumbs.json-unit:json-unit-assertj:5.0.0")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.17.2")
-    runtimeOnly  ("org.postgresql:postgresql")
+    implementation("org.xerial:sqlite-jdbc:3.43.2.0")
     implementation("dev.langchain4j:langchain4j-open-ai:1.8.0")
     implementation("dev.langchain4j:langchain4j:1.8.0")
 }

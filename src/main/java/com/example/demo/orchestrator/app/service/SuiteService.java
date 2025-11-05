@@ -1,6 +1,6 @@
 package com.example.demo.orchestrator.app.service;
 
-import com.example.demo.orchestrator.domain.test.TestSuite;
+import com.example.demo.orchestrator.persistence.test.TestSuite;
 import com.example.demo.orchestrator.dto.suite.CreateTestSuiteRequest;
 import com.example.demo.orchestrator.dto.suite.UpdateTestSuiteRequest;
 import com.example.demo.orchestrator.infra.ProjectRepository;

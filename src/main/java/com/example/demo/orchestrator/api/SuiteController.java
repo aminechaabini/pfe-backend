@@ -4,7 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.example.demo.orchestrator.domain.test.TestSuite;
+import com.example.demo.orchestrator.persistence.test.TestSuite;
 import com.example.demo.orchestrator.dto.suite.CreateTestSuiteRequest;
 import com.example.demo.orchestrator.dto.suite.TestSuiteResponse;
 import com.example.demo.orchestrator.dto.suite.UpdateTestSuiteRequest;

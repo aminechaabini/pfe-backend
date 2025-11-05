@@ -1,6 +1,0 @@
-package com.example.demo.orchestrator.domain.test;
-
-public abstract class Test extends Runnable {
-
-
-}

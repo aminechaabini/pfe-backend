@@ -1,7 +1,7 @@
 package com.example.demo.orchestrator.app.service;
 
 import org.springframework.stereotype.Service;
-import com.example.demo.orchestrator.domain.project.Project;
+import com.example.demo.orchestrator.persistence.project.Project;
 import com.example.demo.orchestrator.infra.ProjectRepository;
 import com.example.demo.orchestrator.dto.project.CreateProjectRequest;
 import com.example.demo.orchestrator.dto.project.UpdateProjectRequest;

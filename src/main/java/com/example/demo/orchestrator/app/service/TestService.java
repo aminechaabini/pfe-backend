@@ -1,7 +1,7 @@
 package com.example.demo.orchestrator.app.service;
 
-import com.example.demo.orchestrator.domain.test.RESTAPITest;
-import com.example.demo.orchestrator.domain.test.TestSuite;
+import com.example.demo.orchestrator.persistence.test.RESTAPITest;
+import com.example.demo.orchestrator.persistence.test.TestSuite;
 import com.example.demo.orchestrator.dto.test.CreateRestApiTestRequest;
 import com.example.demo.orchestrator.dto.test.UpdateRestApiTestRequest;
 import com.example.demo.orchestrator.infra.RESTAPITestRepository;

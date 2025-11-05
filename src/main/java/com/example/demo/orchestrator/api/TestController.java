@@ -4,7 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.example.demo.orchestrator.domain.test.RESTAPITest;
+import com.example.demo.orchestrator.persistence.test.RESTAPITest;
 import com.example.demo.orchestrator.dto.test.CreateRestApiTestRequest;
 import com.example.demo.orchestrator.dto.test.RestApiTestResponse;
 import com.example.demo.orchestrator.dto.test.UpdateRestApiTestRequest;

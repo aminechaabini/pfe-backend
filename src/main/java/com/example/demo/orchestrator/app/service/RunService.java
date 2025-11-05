@@ -2,11 +2,10 @@ package com.example.demo.orchestrator.app.service;
 
 
 import com.example.demo.Runner.Runner;
-import com.example.demo.orchestrator.domain.run.Run;
+import com.example.demo.orchestrator.persistence.run.Run;
 import com.example.demo.orchestrator.dto.run.TriggerRunRequest;
 import com.example.demo.orchestrator.infra.RunRepository;
 import com.example.demo.orchestrator.mq.RunRequestPublisher;
-import com.example.demo.orchestrator.mq.RunRequested;
 import com.example.demo.shared.events.AssertionSpec;
 import com.example.demo.shared.events.HttpRequest;
 import com.example.demo.shared.events.Protocol;

@@ -1,10 +1,10 @@
 package com.example.demo.orchestrator.app.mapper.run;
 
-import com.example.demo.orchestrator.domain.run.Run;
-import com.example.demo.orchestrator.domain.run.RunResult;
-import com.example.demo.orchestrator.domain.run.RunStatus;
-import com.example.demo.orchestrator.domain.test.APITest;
-import com.example.demo.orchestrator.domain.test.TestSuite;
+import com.example.demo.orchestrator.persistence.run.Run;
+import com.example.demo.orchestrator.persistence.run.RunResult;
+import com.example.demo.orchestrator.persistence.run.RunStatus;
+import com.example.demo.orchestrator.persistence.test.APITest;
+import com.example.demo.orchestrator.persistence.test.TestSuite;
 import com.example.demo.orchestrator.dto.run.CreateRunRequest;
 import com.example.demo.orchestrator.dto.run.RunItemResponse;
 import com.example.demo.orchestrator.dto.run.RunResponse;
