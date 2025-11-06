@@ -1,12 +1,11 @@
 package com.example.demo.orchestrator.domain.test.request;
 
+import com.example.demo.orchestrator.domain.test.request.body.XmlBody;
+
 import java.util.Map;
 
-public class SoapRequest extends HttpRequest{
+public class SoapRequest extends HttpRequest<XmlBody>{
 
-    private String url;
-
-   private Map<String, String> httpHeaders;
 
    private Map<String, String> envelopeNamespaces;
 

@@ -5,21 +5,15 @@ import com.example.demo.orchestrator.domain.test.request.body.Body;
 
 import java.util.Map;
 
-public class RestRequest {
+public class RestRequest extends HttpRequest<Body> {
 
-    public HttpMethod method;
+    private Map<String, String> queryParams;
 
-    public String baseUrl;
+    private Auth auth;
 
-    public Map<String, String> queryParams;
+    private String contentType;
 
-    public Map<String, String> headers;
 
-    public Auth auth;
-
-    public String contentType;
-
-    public Body body;
 
 
 }

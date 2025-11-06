@@ -1,4 +1,7 @@
-package com.example.demo.orchestrator.domain.test;
+package com.example.demo.orchestrator.domain.test.test_suite;
+
+import com.example.demo.orchestrator.domain.test.Runnable;
+import com.example.demo.orchestrator.domain.test.TestCase;
 
 import java.time.Instant;
 import java.util.List;

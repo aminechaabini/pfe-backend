@@ -23,6 +23,8 @@ dependencies {
     implementation("net.javacrumbs.json-unit:json-unit-assertj:5.0.0")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.17.2")
     implementation("org.xerial:sqlite-jdbc:3.43.2.0")
+    implementation("com.eclipsesource.minimal-json:minimal-json:0.9.5")
+    implementation("xom:xom:1.3.9")
     implementation("dev.langchain4j:langchain4j-open-ai:1.8.0")
     implementation("dev.langchain4j:langchain4j:1.8.0")
 }

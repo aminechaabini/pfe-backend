@@ -1,4 +1,8 @@
 package com.example.demo.orchestrator.domain.test.request.body;
 
-public class JsonBody extends RawBody{
+import com.eclipsesource.json.JsonObject;
+
+public class JsonBody implements Body{
+
+    private JsonObject jsonObject;
 }
