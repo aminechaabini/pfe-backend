@@ -15,7 +15,6 @@ import static dev.langchain4j.model.chat.Capability.RESPONSE_FORMAT_JSON_SCHEMA;
 @Service
 public class Generator {
 
-    private final String API_KEY = "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";
 
     OpenAiChatModel model = OpenAiChatModel.builder()
             .apiKey(API_KEY)
