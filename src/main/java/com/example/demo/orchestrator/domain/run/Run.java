@@ -1,14 +1,10 @@
 package com.example.demo.orchestrator.domain.run;
 
-import com.example.demo.orchestrator.domain.test.Runnable;
-
 import java.time.Instant;
 
-public class Run {
+public abstract class Run {
 
     private Long id;
-
-    private Runnable runnable;
 
     private RunStatus status = RunStatus.NOT_STARTED;
 
@@ -22,8 +18,7 @@ public class Run {
 
     private Instant completedAt;
 
-    public Run(Runnable runnable){
-        this.runnable = runnable;
+    public Run(){
         this.createdAt = Instant.now();
         this.updatedAt = Instant.now();
     }
@@ -64,9 +59,6 @@ public class Run {
         return id;
     }
 
-    public Runnable getRunnable() {
-        return runnable;
-    }
 
     public RunStatus getStatus() {
         return status;
@@ -92,9 +84,6 @@ public class Run {
         return completedAt;
     }
 
-    public void setResult(RunResult result) {
-        this.result = result;
-    }
 }
 
 

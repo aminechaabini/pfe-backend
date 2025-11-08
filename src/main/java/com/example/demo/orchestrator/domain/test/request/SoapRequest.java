@@ -6,7 +6,6 @@ import java.util.Map;
 
 public class SoapRequest extends HttpRequest<XmlBody>{
 
-
    private Map<String, String> envelopeNamespaces;
 
    private Map<String, Object> soapHeaders;
