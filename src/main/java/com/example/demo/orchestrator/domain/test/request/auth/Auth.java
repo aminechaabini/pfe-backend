@@ -1,9 +1,22 @@
 package com.example.demo.orchestrator.domain.test.request.auth;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public interface Auth {
 
-    public void applyTo(Map<String, List<String>> headers);
+    /**
+     * Apply authentication to the given headers map.
+     */
+    void applyTo(Map<String, List<String>> headers);
+    
+    /**
+     * Helper method to put a single header value into the headers map.
+     */
+    static void putHeaderSingle(Map<String, List<String>> headers, String headerName, String headerValue) {
+        List<String> values = new ArrayList<>();
+        values.add(headerValue);
+        headers.put(headerName, values);
+    }
 }

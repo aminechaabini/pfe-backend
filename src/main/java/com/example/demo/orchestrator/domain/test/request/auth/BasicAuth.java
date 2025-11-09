@@ -1,7 +1,11 @@
 package com.example.demo.orchestrator.domain.test.request.auth;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Basic HTTP auth ("Authorization: Basic base64(user:pass)").
@@ -11,7 +15,7 @@ public final class BasicAuth implements Auth {
     private final char[] password; // char[] for slightly better security than String
 
     public BasicAuth(String username, char[] password) {
-        this.username = Objects.requireNonNull(username);
+        this.username = Objects.requireNonNull(username, "Username cannot be null");
         this.password = password == null ? new char[0] : password.clone();
     }
 
@@ -27,5 +31,4 @@ public final class BasicAuth implements Auth {
     public void clearPassword() {
         Arrays.fill(password, '\u0000');
     }
-
 }

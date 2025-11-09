@@ -2,7 +2,7 @@ package com.example.demo.Runner;
 
 public class e2eRunner {
 
-    public void run(e2eRunRequest){
+    public void run(Object e2eRunRequest){
 
 
         // extracions variables
