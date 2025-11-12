@@ -1,0 +1,4 @@
+package com.example.demo.Runner.assertion_validator;
+
+public class CompositeAssertionValidator {
+}
