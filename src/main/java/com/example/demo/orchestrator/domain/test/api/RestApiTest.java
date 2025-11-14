@@ -1,38 +1,40 @@
 package com.example.demo.orchestrator.domain.test.api;
 
-import com.example.demo.orchestrator.domain.test.request.HttpRequest;
+import com.example.demo.orchestrator.domain.test.assertion.Assertion;
 import com.example.demo.orchestrator.domain.test.request.RestRequest;
 import com.example.demo.orchestrator.domain.test.request.body.Body;
 
 /**
  * Concrete implementation of ApiTest for REST API testing.
- * Ensures that only RestRequest instances are used.
+ * Type parameter ensures only RestRequest instances can be used (compile-time safety).
+ * Validates that assertions match the request body type.
  */
-public class RestApiTest extends ApiTest {
+public class RestApiTest extends ApiTest<RestRequest> {
 
     public RestApiTest(String name, String description) {
         super(name, description);
     }
 
     /**
-     * Override to enforce that only RestRequest instances are allowed.
-     * This provides type safety at the domain level.
+     * Override to enforce that assertions match the response body type.
+     * JSON assertions require JSON body, XML assertions require XML body.
      */
     @Override
-    public void setRequest(HttpRequest<Body> request) {
-        if (request != null && !(request instanceof RestRequest)) {
-            throw new IllegalArgumentException(
-                String.format("RestApiTest requires a RestRequest, but got: %s",
-                    request.getClass().getSimpleName())
-            );
-        }
-        super.setRequest(request);
-    }
+    public void addAssertion(Assertion assertion) {
+        RestRequest request = getRequest();
 
-    /**
-     * Type-safe getter that returns a RestRequest.
-     */
-    public RestRequest getRestRequest() {
-        return (RestRequest) getRequest();
+        // Allow assertions to be added before request is set
+        if (request != null) {
+            Body body = request.getBody();
+
+            if (!assertion.type().isCompatibleWith(body)) {
+                throw new IllegalArgumentException(
+                    String.format("Assertion %s is not compatible with body type %s",
+                        assertion.type(), body.getClass().getSimpleName())
+                );
+            }
+        }
+
+        super.addAssertion(assertion);
     }
 }

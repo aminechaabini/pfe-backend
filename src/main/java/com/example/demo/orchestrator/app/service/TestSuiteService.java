@@ -12,11 +12,11 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class SuiteService {
+public class TestSuiteService {
     private final ProjectRepository projectRepository;
     private final TestSuiteRepository testSuiteRepository;
 
-    public SuiteService(ProjectRepository projectRepository, TestSuiteRepository testSuiteRepository) {
+    public TestSuiteService(ProjectRepository projectRepository, TestSuiteRepository testSuiteRepository) {
         this.projectRepository = projectRepository;
         this.testSuiteRepository = testSuiteRepository;
     }

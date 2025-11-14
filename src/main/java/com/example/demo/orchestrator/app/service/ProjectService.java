@@ -1,67 +1,210 @@
 package com.example.demo.orchestrator.app.service;
 
+import com.example.demo.orchestrator.app.mapper.config.CycleAvoidingMappingContext;
+import com.example.demo.orchestrator.app.mapper.definition.ProjectMapper;
+import com.example.demo.orchestrator.app.mapper.definition.TestSuiteMapper;
+import com.example.demo.orchestrator.app.service.exception.DuplicateEntityException;
+import com.example.demo.orchestrator.app.service.exception.EntityNotFoundException;
+import com.example.demo.orchestrator.domain.project.Project;
+import com.example.demo.orchestrator.domain.test.test_suite.TestSuite;
+import com.example.demo.orchestrator.persistence.entity.project.ProjectEntity;
+import com.example.demo.orchestrator.persistence.entity.test.TestSuiteEntity;
+import com.example.demo.orchestrator.persistence.repository.ProjectRepository;
+import com.example.demo.orchestrator.persistence.repository.TestSuiteRepository;
 import org.springframework.stereotype.Service;
-import com.example.demo.orchestrator.persistence.project.Project;
-import com.example.demo.orchestrator.infra.ProjectRepository;
-import com.example.demo.orchestrator.dto.project.CreateProjectRequest;
-import com.example.demo.orchestrator.dto.project.UpdateProjectRequest;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
+/**
+ * Service for managing projects and test suites (MVP version).
+ *
+ * Responsibilities:
+ * - Project CRUD operations
+ * - Test Suite CRUD operations within projects
+ *
+ * MVP Methods (8 total):
+ * - createProject, getProject, getAllProjects, deleteProject
+ * - createTestSuite, getTestSuite, getProjectSuites, deleteTestSuite
+ */
 @Service
+@Transactional
 public class ProjectService {
-    private final ProjectRepository repository;
 
+    private final ProjectRepository projectRepository;
+    private final TestSuiteRepository testSuiteRepository;
+    private final ProjectMapper projectMapper;
+    private final TestSuiteMapper testSuiteMapper;
 
-    public ProjectService(ProjectRepository repository) {
-        this.repository = repository;
+    public ProjectService(
+            ProjectRepository projectRepository,
+            TestSuiteRepository testSuiteRepository,
+            ProjectMapper projectMapper,
+            TestSuiteMapper testSuiteMapper) {
+        this.projectRepository = projectRepository;
+        this.testSuiteRepository = testSuiteRepository;
+        this.projectMapper = projectMapper;
+        this.testSuiteMapper = testSuiteMapper;
     }
 
-    public Project create(CreateProjectRequest request) {
-        Project project;
-        if (request.getDescription() == null){
-            project = Project.create(request.getName());
+    // ========================================================================
+    // PROJECT OPERATIONS
+    // ========================================================================
+
+    /**
+     * Create a new project.
+     *
+     * @param name project name (required, unique)
+     * @param description project description (optional)
+     * @return created project
+     * @throws DuplicateEntityException if project name already exists
+     */
+    public Project createProject(String name, String description) {
+        // Check for duplicate name
+        if (projectRepository.existsByName(name)) {
+            throw new DuplicateEntityException("Project", "name", name);
         }
-        else {
-            project = Project.create(request.getName(), request.getDescription());
-            }
-        return repository.save(project);
 
-        ///  repo find by id project
+        // Create domain object
+        Project project = Project.create(name, description);
 
-       // project. add testcase
+        // Convert to entity and save
+        ProjectEntity entity = projectMapper.toEntity(project, new CycleAvoidingMappingContext());
+        ProjectEntity saved = projectRepository.save(entity);
 
-          ///      repo save(project)
+        // Convert back to domain
+        return projectMapper.toDomain(saved, new CycleAvoidingMappingContext());
     }
 
-    public Optional<Project> findById(Long id) {
-        return repository.findById(id);
+    /**
+     * Get a project by ID.
+     *
+     * @param projectId project ID
+     * @return project
+     * @throws EntityNotFoundException if project not found
+     */
+    @Transactional(readOnly = true)
+    public Project getProject(Long projectId) {
+        ProjectEntity entity = projectRepository.findByIdWithTestSuites(projectId)
+                .orElseThrow(() -> new EntityNotFoundException("Project", projectId));
+
+        return projectMapper.toDomain(entity, new CycleAvoidingMappingContext());
     }
 
-    public List<Project> findAll() {
-        return repository.findAll();
+    /**
+     * Get all projects.
+     *
+     * @return list of all projects (ordered by creation date DESC)
+     */
+    @Transactional(readOnly = true)
+    public List<Project> getAllProjects() {
+        List<ProjectEntity> entities = projectRepository.findAllOrderByCreatedAtDesc();
+
+        return entities.stream()
+                .map(entity -> projectMapper.toDomain(entity, new CycleAvoidingMappingContext()))
+                .collect(Collectors.toList());
     }
 
-    //may be not correct (p)
+    /**
+     * Delete a project.
+     * Note: This will cascade delete all test suites and tests in the project.
+     *
+     * @param projectId project ID
+     * @throws EntityNotFoundException if project not found
+     */
+    public void deleteProject(Long projectId) {
+        ProjectEntity entity = projectRepository.findById(projectId)
+                .orElseThrow(() -> new EntityNotFoundException("Project", projectId));
 
-    public Optional<Project> update(Long id, UpdateProjectRequest updatedProject) {
-        Optional<Project> project = repository.findById(id);
-        project.ifPresent(p -> {
-            if (updatedProject.getName() != null) p.rename(updatedProject.getName());
-            if (updatedProject.getDescription() != null) p.changeDescription(updatedProject.getDescription());
-            repository.save(p);
-        });
-        return project;
+        projectRepository.delete(entity);
     }
 
-    public boolean delete(Long id) {
-        Optional<Project> existing = repository.findById(id);
-        if (existing.isEmpty()) return false;
-        repository.deleteById(id);
+    // ========================================================================
+    // TEST SUITE OPERATIONS
+    // ========================================================================
 
-        // probabaly add deleting suites and tests depends on what logic is chosen might be chosen by user
-        return true;
+    /**
+     * Create a test suite in a project.
+     *
+     * @param projectId project ID
+     * @param name suite name (required)
+     * @param description suite description (optional)
+     * @return created test suite
+     * @throws EntityNotFoundException if project not found
+     * @throws DuplicateEntityException if suite name already exists in project
+     */
+    public TestSuite createTestSuite(Long projectId, String name, String description) {
+        // Fetch project
+        ProjectEntity projectEntity = projectRepository.findById(projectId)
+                .orElseThrow(() -> new EntityNotFoundException("Project", projectId));
+
+        // Check for duplicate suite name (optional - can be added if needed)
+        // For MVP, we'll allow duplicate names across projects
+
+        // Create domain object
+        TestSuite testSuite = new TestSuite(name, description);
+
+        // Convert to entity and save
+        TestSuiteEntity entity = testSuiteMapper.toEntity(testSuite, new CycleAvoidingMappingContext());
+
+        // Link to project
+        entity.getProjects().add(projectEntity);
+        projectEntity.getTestSuites().add(entity);
+
+        TestSuiteEntity saved = testSuiteRepository.save(entity);
+
+        // Convert back to domain
+        return testSuiteMapper.toDomain(saved, new CycleAvoidingMappingContext());
     }
 
+    /**
+     * Get a test suite by ID.
+     *
+     * @param suiteId test suite ID
+     * @return test suite
+     * @throws EntityNotFoundException if suite not found
+     */
+    @Transactional(readOnly = true)
+    public TestSuite getTestSuite(Long suiteId) {
+        TestSuiteEntity entity = testSuiteRepository.findByIdWithTestCases(suiteId)
+                .orElseThrow(() -> new EntityNotFoundException("TestSuite", suiteId));
+
+        return testSuiteMapper.toDomain(entity, new CycleAvoidingMappingContext());
+    }
+
+    /**
+     * Get all test suites in a project.
+     *
+     * @param projectId project ID
+     * @return list of test suites in the project
+     * @throws EntityNotFoundException if project not found
+     */
+    @Transactional(readOnly = true)
+    public List<TestSuite> getProjectSuites(Long projectId) {
+        // Verify project exists
+        if (!projectRepository.existsById(projectId)) {
+            throw new EntityNotFoundException("Project", projectId);
+        }
+
+        List<TestSuiteEntity> entities = testSuiteRepository.findByProjects_Id(projectId);
+
+        return entities.stream()
+                .map(entity -> testSuiteMapper.toDomain(entity, new CycleAvoidingMappingContext()))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Delete a test suite.
+     * Note: This will cascade delete all tests in the suite.
+     *
+     * @param suiteId test suite ID
+     * @throws EntityNotFoundException if suite not found
+     */
+    public void deleteTestSuite(Long suiteId) {
+        TestSuiteEntity entity = testSuiteRepository.findById(suiteId)
+                .orElseThrow(() -> new EntityNotFoundException("TestSuite", suiteId));
+
+        testSuiteRepository.delete(entity);
+    }
 }

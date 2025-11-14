@@ -3,81 +3,88 @@ package com.example.demo.orchestrator.domain.test.request;
 import com.example.demo.orchestrator.domain.test.request.auth.Auth;
 import com.example.demo.orchestrator.domain.test.request.body.Body;
 
-import java.util.*;
-
 /**
- * REST API request with query parameters, authentication, and content type.
+ * REST API request with HTTP-level authentication.
+ * Query parameters and headers are inherited from HttpRequest.
  */
 public class RestRequest extends HttpRequest<Body> {
 
-    private Map<String, String> queryParams;
     private Auth auth;
-    private String contentType;
 
     public RestRequest() {
         super();
-        this.queryParams = new HashMap<>();
     }
 
     public RestRequest(HttpMethod method, String url, Body body) {
         super(method, url, body);
-        this.queryParams = new HashMap<>();
-    }
-
-    // Getters
-    public Map<String, String> getQueryParams() {
-        return Collections.unmodifiableMap(queryParams);
     }
 
     public Auth getAuth() {
         return auth;
     }
 
-    public String getContentType() {
-        return contentType;
-    }
-
-    // Setters
     public void setAuth(Auth auth) {
         this.auth = auth;
     }
 
-    public void setContentType(String contentType) {
-        this.contentType = contentType;
-    }
-
     /**
-     * Add a query parameter.
+     * Validates the REST request according to HTTP/REST specifications (RFC 7231).
+     * Checks:
+     * - Base HTTP validation (URL, method)
+     * - GET/HEAD/DELETE MUST NOT have body
+     * - PATCH MUST have body
+     * - TRACE MUST NOT have body
+     * - Content-Type header MUST be present when body exists
+     * - Auth validation if present
+     * @throws IllegalStateException if validation fails
      */
-    public void addQueryParam(String name, String value) {
-        Objects.requireNonNull(name, "Query param name cannot be null");
-        Objects.requireNonNull(value, "Query param value cannot be null");
-        this.queryParams.put(name, value);
+    @Override
+    public void validate() {
+        super.validate();
+
+        HttpMethod method = getMethod();
+        Body body = getBody();
+
+        // RFC 7231: GET, HEAD, DELETE should not have body (no defined semantics)
+        if ((method == HttpMethod.GET || method == HttpMethod.HEAD || method == HttpMethod.DELETE)
+            && body != null) {
+            throw new IllegalStateException(
+                method + " requests MUST NOT have a body (RFC 7231)"
+            );
+        }
+
+        // RFC 5789: PATCH must have body (contains patch instructions)
+        if (method == HttpMethod.PATCH && body == null) {
+            throw new IllegalStateException(
+                "PATCH requests MUST have a body (RFC 5789)"
+            );
+        }
+
+        // RFC 7231: TRACE must not have body
+        if (method == HttpMethod.TRACE && body != null) {
+            throw new IllegalStateException(
+                "TRACE requests MUST NOT have a body (RFC 7231)"
+            );
+        }
+
+        // RFC 7231: Content-Type is required when body is present
+        if (body != null && !hasHeader("Content-Type")) {
+            throw new IllegalStateException(
+                "Content-Type header is required when body is present (RFC 7231)"
+            );
+        }
+
+        // Validate authentication if present
+        if (auth != null) {
+            auth.validate();
+        }
     }
 
-    /**
-     * Remove a query parameter.
-     */
-    public void removeQueryParam(String name) {
-        this.queryParams.remove(name);
-    }
-
-    /**
-     * Clear all query parameters.
-     */
-    public void clearQueryParams() {
-        this.queryParams.clear();
-    }
-
-    // NOTE: Authentication application has been removed from the domain model.
-    // Authentication should be applied at the infrastructure/execution layer, not here.
-    // The domain model should only represent "this request has authentication",
-    // not perform the actual authentication header application.
-    //
+    // NOTE: Authentication application happens at the infrastructure/execution layer.
+    // The domain model only represents "this request has authentication".
     // Example usage in infrastructure layer:
     //   Map<String, List<String>> headers = new HashMap<>(request.getHeaders());
     //   if (request.getAuth() != null) {
     //       request.getAuth().applyTo(headers);
     //   }
-    //   // then use headers in actual HTTP call
 }

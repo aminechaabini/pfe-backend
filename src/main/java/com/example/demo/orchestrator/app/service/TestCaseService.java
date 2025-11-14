@@ -12,11 +12,11 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class TestService {
+public class TestCaseService {
     private final TestSuiteRepository testSuiteRepository;
     private final RESTAPITestRepository restApiTestRepository;
 
-    public TestService(TestSuiteRepository testSuiteRepository, RESTAPITestRepository restApiTestRepository) {
+    public TestCaseService(TestSuiteRepository testSuiteRepository, RESTAPITestRepository restApiTestRepository) {
         this.testSuiteRepository = testSuiteRepository;
         this.restApiTestRepository = restApiTestRepository;
     }

@@ -28,6 +28,10 @@ dependencies {
     implementation("xom:xom:1.3.9")
     implementation("dev.langchain4j:langchain4j-open-ai:1.8.0")
     implementation("dev.langchain4j:langchain4j:1.8.0")
+
+    // MapStruct for object mapping
+    implementation("org.mapstruct:mapstruct:1.5.5.Final")
+    annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
 }
 
 tasks.test { useJUnitPlatform() }

@@ -1,8 +1,10 @@
-package com.example.demo.Runner;
+package com.example.demo.Runner.builder;
 
-import com.example.demo.shared.events.HttpRequest;
-import com.example.demo.shared.events.RunRequest;
+
+import com.example.demo.orchestrator.domain.test.request.HttpRequest;
+
+import java.util.Map;
 
 public interface RequestBuilder {
-    HttpRequest build(HttpRequest request);
+    java.net.http.HttpRequest build(HttpRequest request, Map<String, String> variables);
 }

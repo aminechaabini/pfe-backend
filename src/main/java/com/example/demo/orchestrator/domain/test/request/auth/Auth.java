@@ -10,7 +10,13 @@ public interface Auth {
      * Apply authentication to the given headers map.
      */
     void applyTo(Map<String, List<String>> headers);
-    
+
+    /**
+     * Validates the authentication configuration.
+     * @throws IllegalStateException if validation fails
+     */
+    void validate();
+
     /**
      * Helper method to put a single header value into the headers map.
      */

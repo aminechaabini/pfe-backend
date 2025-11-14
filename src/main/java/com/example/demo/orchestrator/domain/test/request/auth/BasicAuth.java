@@ -27,6 +27,14 @@ public final class BasicAuth implements Auth {
         Auth.putHeaderSingle(headers, "Authorization", "Basic " + encoded);
     }
 
+    @Override
+    public void validate() {
+        if (username == null || username.isBlank()) {
+            throw new IllegalStateException("Basic Auth username cannot be null or blank");
+        }
+        // Password can be empty (some systems allow empty passwords)
+    }
+
     /** Call when done to clear sensitive password char[] from memory (optional). */
     public void clearPassword() {
         Arrays.fill(password, '\u0000');

@@ -1,38 +1,31 @@
 package com.example.demo.orchestrator.domain.test.api;
 
-import com.example.demo.orchestrator.domain.test.request.HttpRequest;
+import com.example.demo.orchestrator.domain.test.assertion.Assertion;
 import com.example.demo.orchestrator.domain.test.request.SoapRequest;
-import com.example.demo.orchestrator.domain.test.request.body.Body;
 
 /**
  * Concrete implementation of ApiTest for SOAP API testing.
- * Ensures that only SoapRequest instances are used.
+ * Type parameter ensures only SoapRequest instances can be used (compile-time safety).
+ * Validates that only XML-compatible assertions are used (SOAP is always XML).
  */
-public class SoapApiTest extends ApiTest {
+public class SoapApiTest extends ApiTest<SoapRequest> {
 
     public SoapApiTest(String name, String description) {
         super(name, description);
     }
 
     /**
-     * Override to enforce that only SoapRequest instances are allowed.
-     * This provides type safety at the domain level.
+     * Override to enforce that only XML-compatible assertions are allowed.
+     * SOAP responses are always XML, so JSON assertions are not permitted.
      */
     @Override
-    public void setRequest(HttpRequest<Body> request) {
-        if (request != null && !(request instanceof SoapRequest)) {
+    public void addAssertion(Assertion assertion) {
+        if (assertion.type().requiresJson()) {
             throw new IllegalArgumentException(
-                String.format("SoapApiTest requires a SoapRequest, but got: %s",
-                    request.getClass().getSimpleName())
+                String.format("SOAP tests do not support JSON assertions. Cannot use: %s",
+                    assertion.type())
             );
         }
-        super.setRequest(request);
-    }
-
-    /**
-     * Type-safe getter that returns a SoapRequest.
-     */
-    public SoapRequest getSoapRequest() {
-        return (SoapRequest) getRequest();
+        super.addAssertion(assertion);
     }
 }

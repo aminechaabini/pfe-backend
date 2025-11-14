@@ -12,10 +12,13 @@ import java.util.Objects;
 
 /**
  * Base class for API tests (REST, SOAP, etc.)
+ * Generic over the request type to provide compile-time type safety.
+ *
+ * @param <R> The specific type of HttpRequest (e.g., RestRequest, SoapRequest)
  */
-public abstract class ApiTest extends TestCase {
+public abstract class ApiTest<R extends HttpRequest<? extends Body>> extends TestCase {
 
-    private HttpRequest<Body> request;
+    private R request;
     private final List<Assertion> assertions = new ArrayList<>();
 
     protected ApiTest(String name, String description) {
@@ -23,7 +26,7 @@ public abstract class ApiTest extends TestCase {
     }
 
     // Getters
-    public HttpRequest<Body> getRequest() {
+    public R getRequest() {
         return request;
     }
 
@@ -32,7 +35,7 @@ public abstract class ApiTest extends TestCase {
     }
 
     // Setters
-    public void setRequest(HttpRequest<Body> request) {
+    public void setRequest(R request) {
         this.request = Objects.requireNonNull(request, "Request cannot be null");
         touch();
     }

@@ -9,7 +9,7 @@ import com.example.demo.orchestrator.dto.suite.CreateTestSuiteRequest;
 import com.example.demo.orchestrator.dto.suite.TestSuiteResponse;
 import com.example.demo.orchestrator.dto.suite.UpdateTestSuiteRequest;
 import com.example.demo.orchestrator.app.mapper.suite.SuiteMapper;
-import com.example.demo.orchestrator.app.service.SuiteService;
+import com.example.demo.orchestrator.app.service.TestSuiteService;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,20 +17,20 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/projects/{projectId}/suites")
 public class SuiteController {
-    private final SuiteService suiteService;
+    private final TestSuiteService testSuiteService;
 
-    public SuiteController(SuiteService suiteService) {
-        this.suiteService = suiteService;
+    public SuiteController(TestSuiteService testSuiteService) {
+        this.testSuiteService = testSuiteService;
     }
 
     @PostMapping()
     public ResponseEntity<TestSuiteResponse> create(@RequestBody CreateTestSuiteRequest request) {
-        return ResponseEntity.ok(SuiteMapper.toResponse(suiteService.create(request)));
+        return ResponseEntity.ok(SuiteMapper.toResponse(testSuiteService.create(request)));
     }
 
     @GetMapping("/{suiteId}")
     public ResponseEntity<TestSuiteResponse> findById(@PathVariable("suiteId") Long suiteId) {
-        Optional<TestSuite> suite = suiteService.findById(suiteId);
+        Optional<TestSuite> suite = testSuiteService.findById(suiteId);
         if (suite.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
@@ -39,7 +39,7 @@ public class SuiteController {
 
     @GetMapping()
     public ResponseEntity<List<TestSuiteResponse>> findAll() {
-        List<TestSuite> suites = suiteService.findAll();
+        List<TestSuite> suites = testSuiteService.findAll();
         List<TestSuiteResponse> responses = suites.stream()
                 .map(SuiteMapper::toResponse)
                 .toList();
@@ -48,12 +48,12 @@ public class SuiteController {
 
     @PutMapping("/{suiteId}")
     public ResponseEntity<TestSuiteResponse> update(@PathVariable("suiteId") Long suiteId, @RequestBody UpdateTestSuiteRequest request) {
-        return ResponseEntity.ok(SuiteMapper.toResponse(suiteService.update(suiteId, request)));
+        return ResponseEntity.ok(SuiteMapper.toResponse(testSuiteService.update(suiteId, request)));
     }
 
     @DeleteMapping("/{suiteId}")
     public ResponseEntity<Void> delete(@PathVariable("suiteId") Long suiteId) {
-        if (suiteService.delete(suiteId) == false) {
+        if (testSuiteService.delete(suiteId) == false) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
         return ResponseEntity.ok(null);

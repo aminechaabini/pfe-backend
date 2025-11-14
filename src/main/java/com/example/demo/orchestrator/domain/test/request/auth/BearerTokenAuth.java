@@ -19,4 +19,11 @@ public final class BearerTokenAuth implements Auth {
     public void applyTo(Map<String, List<String>> headers) {
         Auth.putHeaderSingle(headers, "Authorization", "Bearer " + token);
     }
+
+    @Override
+    public void validate() {
+        if (token == null || token.isBlank()) {
+            throw new IllegalStateException("Bearer token cannot be null or blank");
+        }
+    }
 }
