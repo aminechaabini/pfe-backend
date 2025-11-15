@@ -1,5 +1,7 @@
 package com.example.demo.orchestrator.domain.project;
 
+import com.example.demo.orchestrator.domain.spec.Endpoint;
+import com.example.demo.orchestrator.domain.spec.SpecSource;
 import com.example.demo.orchestrator.domain.test.test_suite.TestSuite;
 
 import java.time.Instant;
@@ -18,6 +20,8 @@ public class Project {
     private String description;
     private final Map<String, String> variables = new HashMap<>();
     private final List<TestSuite> testSuites = new ArrayList<>();
+    private final List<SpecSource> specSources = new ArrayList<>();
+    private final List<Endpoint> endpoints = new ArrayList<>();
     private final Instant createdAt;
     private Instant updatedAt;
 

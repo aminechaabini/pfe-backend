@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.File;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -172,5 +173,10 @@ public class ProjectController {
                 suite.getCreatedAt(),
                 suite.getUpdatedAt()
         );
+    }
+
+    @PostMapping("{id}/spec")
+    private void uploadSpecFile(@RequestBody File file){
+        // call projectService.uploadSpecFile(id, file)
     }
 }

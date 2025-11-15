@@ -1,5 +1,6 @@
 package com.example.demo.orchestrator.domain.test.test_suite;
 
+import com.example.demo.orchestrator.domain.spec.Endpoint;
 import com.example.demo.orchestrator.domain.test.TestCase;
 
 import java.time.Instant;
@@ -18,6 +19,7 @@ public class TestSuite {
     private String description;
     private final Map<String, String> variables = new HashMap<>();
     private final List<TestCase> testCases = new ArrayList<>();
+    private Endpoint endpoint;
     private final Instant createdAt;
     protected Instant updatedAt;
 

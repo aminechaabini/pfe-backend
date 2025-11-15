@@ -5,8 +5,10 @@ import com.example.demo.orchestrator.app.mapper.definition.ProjectMapper;
 import com.example.demo.orchestrator.app.mapper.definition.TestSuiteMapper;
 import com.example.demo.orchestrator.app.service.exception.DuplicateEntityException;
 import com.example.demo.orchestrator.app.service.exception.EntityNotFoundException;
+import com.example.demo.orchestrator.app.service.spec.SpecParser;
 import com.example.demo.orchestrator.domain.project.Project;
 import com.example.demo.orchestrator.domain.test.test_suite.TestSuite;
+import com.example.demo.orchestrator.infra.SpecParserFactory;
 import com.example.demo.orchestrator.persistence.entity.project.ProjectEntity;
 import com.example.demo.orchestrator.persistence.entity.test.TestSuiteEntity;
 import com.example.demo.orchestrator.persistence.repository.ProjectRepository;
@@ -14,7 +16,9 @@ import com.example.demo.orchestrator.persistence.repository.TestSuiteRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.File;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -206,5 +210,57 @@ public class ProjectService {
                 .orElseThrow(() -> new EntityNotFoundException("TestSuite", suiteId));
 
         testSuiteRepository.delete(entity);
+    }
+
+    public void uploadSpecFile(Long projectId, File file) {
+        // 1. Validate project exists
+        Optional<ProjectEntity> project = projectRepository.findById(projectId);
+        if (project.isEmpty()) throw new EntityNotFoundException("Project", projectId);
+
+        // 2. Check for duplicate spec name
+        if specSourceRepository.existsByProjectIdAndName(projectId, name):
+        throw DuplicateEntityException
+
+        // 3. Parse spec file (delegate to infrastructure)
+        SpecParserFactory factory = new SpecParserFactory();
+        SpecParser specParser = factory.get;
+        parsedSpec = specParser.parse(content, specType)
+
+        // 4. Create domain entities (domain layer creates itself)
+        specSource = SpecSource.create(name, fileName, specType, content)
+        specSource.setVersion(parsedSpec.getVersion())
+
+        // 5. Extract endpoints from parsed data
+        for each parsedEndpoint in parsedSpec.getEndpoints():
+
+        // Check if endpoint already exists in project (deduplication)
+        existingEndpoint = endpointRepository.findByProjectIdAndKey(
+                projectId,
+                parsedEndpoint.getUniqueKey()
+        )
+
+        if existingEndpoint:
+        // Endpoint already exists (from another spec)
+        // Link it to this spec source
+        existingEndpoint.addParsedFromSpec(specSource.getId())
+        endpoints.add(existingEndpoint)
+          else:
+        // Create new endpoint
+        endpoint = parsedEndpoint.toDomainEntity()
+        endpoint.setParsedFromSpec(specSource.getId())
+        endpoints.add(endpoint)
+
+        // 6. Add endpoints to project
+        for each endpoint in endpoints:
+        project.addEndpoint(endpoint)
+
+        // 7. Add spec source to project
+        project.addSpecSource(specSource)
+
+        // 8. Persist everything (transactional)
+        projectRepository.save(project)  // Cascades to specs and endpoints
+
+        // 9. Return domain object
+        return specSource
     }
 }

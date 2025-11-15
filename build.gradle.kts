@@ -32,6 +32,9 @@ dependencies {
     // MapStruct for object mapping
     implementation("org.mapstruct:mapstruct:1.5.5.Final")
     annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
+
+    implementation("io.swagger.parser.v3:swagger-parser:2.1.35")
+    implementation("wsdl4j:wsdl4j:1.6.3")
 }
 
 tasks.test { useJUnitPlatform() }

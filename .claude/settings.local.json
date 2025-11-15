@@ -3,7 +3,11 @@
     "allow": [
       "Bash(cat:*)",
       "Bash(./gradlew build:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(git -C \"C:\\Users\\a50048601\\pfe\\demo\" log --oneline -20)",
+      "Bash(nul)",
+      "Bash(git -C \"C:\\Users\\a50048601\\pfe\\demo\" diff HEAD~1 HEAD --stat)",
+      "Bash(git -C \"C:\\Users\\a50048601\\pfe\\demo\" log --all --oneline --graph -20)"
     ],
     "deny": [],
     "ask": []
