@@ -1,9 +1,7 @@
 package com.example.demo.orchestrator.api;
 
-import com.example.demo.llm_adapter.Generator;
 import com.example.demo.orchestrator.app.service.GenerationService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 @RestController

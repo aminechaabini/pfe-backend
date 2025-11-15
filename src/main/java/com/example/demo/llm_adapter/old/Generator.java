@@ -1,8 +1,7 @@
-package com.example.demo.llm_adapter;
+package com.example.demo.llm_adapter.old;
 
 
 import com.example.demo.shared.events.RunRequest;
-import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.service.AiServices;
@@ -14,7 +13,6 @@ import static dev.langchain4j.model.chat.Capability.RESPONSE_FORMAT_JSON_SCHEMA;
 
 @Service
 public class Generator {
-
 
     OpenAiChatModel model = OpenAiChatModel.builder()
             .apiKey(API_KEY)

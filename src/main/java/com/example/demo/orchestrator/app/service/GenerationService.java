@@ -1,6 +1,6 @@
 package com.example.demo.orchestrator.app.service;
 
-import com.example.demo.llm_adapter.Generator;
+import com.example.demo.llm_adapter.old.Generator;
 import com.example.demo.orchestrator.domain.test.TestCase;
 import org.springframework.stereotype.Service;
 
