@@ -25,6 +25,8 @@ public class Project {
     private final Instant createdAt;
     private Instant updatedAt;
 
+
+
     private Project(String name, String description) {
         validateName(name);
         this.name = name.trim();
@@ -75,6 +77,14 @@ public class Project {
 
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    public List<SpecSource> getSpecSources() {
+        return Collections.unmodifiableList(specSources);
+    }
+
+    public List<Endpoint> getEndpoints() {
+        return Collections.unmodifiableList(endpoints);
     }
 
     /**
@@ -147,19 +157,32 @@ public class Project {
 
     /**
      * Add a test suite to the project.
+     * Enforces the business rule: TestSuite names must be unique within a Project.
+     *
      * @param testSuite the test suite to add
-     * @throws IllegalArgumentException if suite is null or already exists
+     * @throws IllegalArgumentException if suite is null, already exists, or name conflicts
      */
     public void addSuite(TestSuite testSuite) {
         Objects.requireNonNull(testSuite, "Test suite cannot be null");
-        
+
         // Check for duplicates by ID if available
         if (testSuite.getId() != null && findTestSuiteById(testSuite.getId()).isPresent()) {
             throw new IllegalArgumentException("Suite with ID " + testSuite.getId() + " already exists in project");
         }
-        
+
+        // Enforce uniqueness constraint: no other suite in this project can have this name
+        Optional<TestSuite> conflicting = testSuites.stream()
+                .filter(s -> s.getName().equalsIgnoreCase(testSuite.getName()))
+                .findFirst();
+
+        if (conflicting.isPresent()) {
+            throw new IllegalArgumentException(
+                "Test suite with name '" + testSuite.getName() + "' already exists in project"
+            );
+        }
+
         this.testSuites.add(testSuite);
-        touch();
+        touch(); // Project's collection changed
     }
 
     /**
@@ -186,54 +209,149 @@ public class Project {
                 .findFirst();
     }
 
+    /**
+     * Get the most recent activity timestamp across the project and all its test suites.
+     * This is useful for tracking "when was anything in this project last changed".
+     *
+     * Note: This only considers Project and TestSuite timestamps. If you need TestCase
+     * timestamps as well, you'd need to iterate through all test cases in all suites.
+     *
+     * @return the most recent updatedAt timestamp
+     */
+    public Instant getLastActivityTime() {
+        Instant max = this.updatedAt;
+
+        for (TestSuite suite : testSuites) {
+            if (suite.getUpdatedAt().isAfter(max)) {
+                max = suite.getUpdatedAt();
+            }
+        }
+
+        return max;
+    }
+
+    public void addSpecSource(SpecSource specSource){
+        //Enforce uniqueness constraint: no other spec source in this project can have this name
+        Optional<SpecSource> conflicting = specSources.stream()
+                .filter(s -> s.getName().equalsIgnoreCase(specSource.getName()))
+                .findFirst();
+
+        if (conflicting.isPresent()) {
+            throw new IllegalArgumentException(
+                "Spec source with name '" + specSource.getName() + "' already exists in project"
+            );
+        }
+        else{
+            specSources.add(specSource);
+            touch();
+        }
+    }
+
+    public boolean removeSpecSource(Long specSourceId){
+        //Remove spec source by id
+        Optional<SpecSource> specSource = specSources.stream()
+                .filter(s -> s.getId().equals(specSourceId))
+                .findFirst();
+        if (specSource.isPresent()) {
+            specSources.remove(specSource.get());
+            touch();
+            return true;
+        }
+        return false;
+    }
+
+    public void updateSpecSource(Long specSourceId, SpecSource updated) {
+        for (int i = 0; i < specSources.size(); i++) {
+            if (specSources.get(i).getId().equals(specSourceId)) {
+                updated.setId(specSourceId); // keep ID
+                specSources.set(i, updated);
+                touch();
+                return;
+            }
+        }
+    }
+
+    public void addEnpoint (Endpoint endpoint){
+        //Enforce uniqueness constraint: no other endpoint in this project can have this name
+        Optional<Endpoint> conflicting = endpoints.stream()
+                .filter(s -> s.getName().equalsIgnoreCase(endpoint.getName()))
+                .findFirst();
+
+        //enfore that the endpoint specsource exist in the project
+        Optional<SpecSource> specSource = specSources.stream()
+                .filter(s -> s.getId().equals(endpoint.getId()))
+                .findFirst();
+
+        if (specSource.isEmpty()) {
+            throw new IllegalArgumentException(
+                "Spec source with id '" + endpoint.getId() + "' does not exist in project"
+            );
+        }
+
+        if (conflicting.isPresent()) {
+            throw new IllegalArgumentException(
+                "Endpoint with name '" + endpoint.getName() + "' already exists in project"
+            );
+        }
+        else{
+            endpoints.add(endpoint);
+            touch();
+        }
+
+    }
+
+    public boolean removeEndpoint(Endpoint endpoint){
+        Optional<Endpoint> optionalEndpoint = endpoints.stream()
+                .filter(e -> e.getId().equals(endpoint.getId()))
+                .findFirst();
+        if (optionalEndpoint.isPresent()) {
+            endpoints.remove(endpoint);
+            touch();
+            return true;
+        }
+        return false;
+
+    }
+
     // ========================================================================
-    // AGGREGATE ROOT FACADE METHODS
-    // Project is the aggregate root for TestSuites. Modifications to TestSuites
-    // should go through these methods to maintain consistency and update timestamps.
+    // BUSINESS INVARIANT ENFORCEMENT
+    // Project enforces that TestSuite names are unique within the project.
+    // These methods delegate to TestSuite but enforce the uniqueness constraint.
+    // Note: These methods do NOT update Project.updatedAt since the Project
+    // itself isn't changing - only the TestSuite is changing.
     // ========================================================================
 
     /**
      * Rename a test suite within this project.
-     * This maintains the aggregate boundary by keeping Project in control.
+     * Enforces the business rule: TestSuite names must be unique within a Project.
      *
      * @param testSuiteId the ID of the test suite to rename
      * @param newName the new name for the test suite
-     * @throws IllegalArgumentException if suite not found or name invalid
+     * @throws IllegalArgumentException if suite not found, name invalid, or name conflicts
      */
     public void renameTestSuite(Long testSuiteId, String newName) {
         TestSuite suite = findTestSuiteById(testSuiteId)
             .orElseThrow(() -> new IllegalArgumentException("Test suite not found: " + testSuiteId));
+
+        // Check if name is actually changing
+        if (suite.getName().equalsIgnoreCase(newName.trim())) {
+            return; // No change needed
+        }
+
+        // Enforce uniqueness constraint: no other suite in this project can have this name
+        Optional<TestSuite> conflicting = testSuites.stream()
+                .filter(s -> !s.getId().equals(testSuiteId)) // Exclude current suite
+                .filter(s -> s.getName().equalsIgnoreCase(newName.trim()))
+                .findFirst();
+
+        if (conflicting.isPresent()) {
+            throw new IllegalArgumentException(
+                "Test suite with name '" + newName + "' already exists in project"
+            );
+        }
+
         suite.rename(newName);
-        touch(); // Project aggregate is modified
-    }
-
-    /**
-     * Update a test suite's description within this project.
-     *
-     * @param testSuiteId the ID of the test suite
-     * @param newDescription the new description
-     * @throws IllegalArgumentException if suite not found or description invalid
-     */
-    public void updateTestSuiteDescription(Long testSuiteId, String newDescription) {
-        TestSuite suite = findTestSuiteById(testSuiteId)
-            .orElseThrow(() -> new IllegalArgumentException("Test suite not found: " + testSuiteId));
-        suite.updateDescription(newDescription);
-        touch();
-    }
-
-    /**
-     * Set a variable on a test suite within this project.
-     *
-     * @param testSuiteId the ID of the test suite
-     * @param variableName the variable name
-     * @param variableValue the variable value
-     * @throws IllegalArgumentException if suite not found or variable invalid
-     */
-    public void setTestSuiteVariable(Long testSuiteId, String variableName, String variableValue) {
-        TestSuite suite = findTestSuiteById(testSuiteId)
-            .orElseThrow(() -> new IllegalArgumentException("Test suite not found: " + testSuiteId));
-        suite.setVariable(variableName, variableValue);
-        touch();
+        // Note: Project.updatedAt is NOT updated - only TestSuite changed
     }
 
     /**

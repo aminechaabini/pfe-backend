@@ -2,8 +2,8 @@ package com.example.demo.orchestrator.domain.spec;
 
 public class RestEndpoint extends Endpoint {
     // REST-specific fields
-    public HttpMethod method; // GET, POST, etc.
-    public String path;       // /api/orders/{id}
+    private HttpMethod method; // GET, POST, etc.
+    private String path;       // /api/orders/{id}
 
     // Implementations from spec
     @Override
@@ -24,6 +24,15 @@ public class RestEndpoint extends Endpoint {
     @Override
     public boolean hasPathParameters() {
         return path != null && path.contains("{");
+    }
+
+    // Getters
+    public HttpMethod getMethod() {
+        return method;
+    }
+
+    public String getPath() {
+        return path;
     }
 
     // REST-specific methods (minimal implementations)

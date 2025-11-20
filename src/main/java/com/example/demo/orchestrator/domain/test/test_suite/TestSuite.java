@@ -23,11 +23,14 @@ public class TestSuite {
     private final Instant createdAt;
     protected Instant updatedAt;
 
-    public TestSuite(String name, String description) {
+    public TestSuite(String name, String description, Map<String, String> variables, List<TestCase> testCases, Endpoint endpoint) {
         validateName(name);
         this.name = name.trim();
         validateDescription(description);
         this.description = description == null ? "" : description.trim();
+        this.variables.putAll(variables);
+        this.testCases.addAll(testCases);
+        this.endpoint = endpoint;
         this.createdAt = Instant.now();
         this.updatedAt = this.createdAt;
     }
@@ -66,6 +69,10 @@ public class TestSuite {
 
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    public Endpoint getEndpoint() {
+        return endpoint;
     }
 
     /**
@@ -164,14 +171,15 @@ public class TestSuite {
     }
 
     // ========================================================================
-    // AGGREGATE ROOT FACADE METHODS
-    // TestSuite is the aggregate root for TestCases. Modifications to TestCases
-    // should go through these methods to maintain consistency and update timestamps.
+    // CONVENIENCE METHODS FOR TEST CASE MANAGEMENT
+    // These are convenience methods for modifying test cases within this suite.
+    // Note: These methods do NOT update TestSuite.updatedAt since the TestSuite
+    // itself isn't changing - only the TestCase is changing.
     // ========================================================================
 
     /**
      * Rename a test case within this test suite.
-     * This maintains the aggregate boundary by keeping TestSuite in control.
+     * This is a convenience method - delegates to TestCase.rename().
      *
      * @param testCaseId the ID of the test case to rename
      * @param newName the new name for the test case
@@ -179,23 +187,24 @@ public class TestSuite {
      */
     public void renameTestCase(Long testCaseId, String newName) {
         TestCase testCase = findTestCaseById(testCaseId)
-            .orElseThrow(() -> new IllegalArgumentException("Test case not found: " + testCaseId));
-        testCase.rename(newName);
-        touch(); // TestSuite aggregate is modified
-    }
+                .orElseThrow(() -> new IllegalArgumentException("Test case not found: " + testCaseId));
 
-    /**
-     * Update a test case's description within this test suite.
-     *
-     * @param testCaseId the ID of the test case
-     * @param newDescription the new description
-     * @throws IllegalArgumentException if test case not found or description invalid
-     */
-    public void updateTestCaseDescription(Long testCaseId, String newDescription) {
-        TestCase testCase = findTestCaseById(testCaseId)
-            .orElseThrow(() -> new IllegalArgumentException("Test case not found: " + testCaseId));
-        testCase.updateDescription(newDescription);
-        touch();
+        if (testCase.getName().equalsIgnoreCase(newName.trim())) {
+            return; // No change needed
+        }
+
+        // Enforce uniqueness constraint: no other suite in this project can have this name
+        Optional<TestCase> conflicting = testCases.stream()
+                .filter(s -> !s.getId().equals(testCaseId)) // Exclude current suite
+                .filter(s -> s.getName().equalsIgnoreCase(newName.trim()))
+                .findFirst();
+
+        if (conflicting.isPresent()) {
+            throw new IllegalArgumentException(
+                    "Test case with name '" + newName + "' already exists in test suite"
+            );
+            // Note: TestSuite.updatedAt is NOT updated - only TestCase changed
+        }
     }
 
     private void validateName(String name) {

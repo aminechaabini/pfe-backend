@@ -3,8 +3,7 @@ package com.example.demo.orchestrator.app.service;
 import com.example.demo.orchestrator.persistence.test.TestSuite;
 import com.example.demo.orchestrator.dto.suite.CreateTestSuiteRequest;
 import com.example.demo.orchestrator.dto.suite.UpdateTestSuiteRequest;
-import com.example.demo.orchestrator.infra.ProjectRepository;
-import com.example.demo.orchestrator.infra.TestSuiteRepository;
+import com.example.demo.orchestrator.infrastructure.persistence.jpa.TestSuiteRepository;
 import org.springframework.stereotype.Service;
 
 
@@ -13,11 +12,10 @@ import java.util.Optional;
 
 @Service
 public class TestSuiteService {
-    private final ProjectRepository projectRepository;
     private final TestSuiteRepository testSuiteRepository;
 
-    public TestSuiteService(ProjectRepository projectRepository, TestSuiteRepository testSuiteRepository) {
-        this.projectRepository = projectRepository;
+    public TestSuiteService(TestSuiteRepository testSuiteRepository) {
+
         this.testSuiteRepository = testSuiteRepository;
     }
 

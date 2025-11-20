@@ -5,6 +5,9 @@ import com.example.demo.orchestrator.domain.spec.HttpMethod;
 import com.example.demo.orchestrator.domain.spec.SpecType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.models.Swagger;
+import io.swagger.models.reader.SwaggerParser;
+import io.swagger.parser.OpenAPIParser;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
@@ -12,6 +15,7 @@ import io.swagger.v3.parser.OpenAPIV3Parser;
 import io.swagger.v3.parser.core.models.SwaggerParseResult;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,95 +27,35 @@ import java.util.List;
  * and handles conversion between formats automatically.
  */
 @Component
-public class RestSpecParser implements SpecParser {
+public class RestSpecParser {
 
-    private final ObjectMapper objectMapper;
-
-    public RestSpecParser(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
-
-    @Override
-    public ParsedSpec parse(String content, SpecType specType) {
-        validateSpecType(specType);
-
-        SwaggerParseResult result = new OpenAPIV3Parser().readContents(content);
-
-        validateParseResult(result);
+    public void parse(String content){
+        SwaggerParseResult result = new OpenAPIParser().readContents(content, null, null);
 
         OpenAPI openAPI = result.getOpenAPI();
-        String version = extractVersion(openAPI);
-        List<ParsedEndpoint> endpoints = extractEndpoints(openAPI);
 
-        return new ParsedSpec(version, endpoints);
-    }
+        if (result.getMessages() != null) result.getMessages().forEach(System.err::println); // validation errors and warnings
 
-    private void validateSpecType(SpecType specType) {
-        if (!specType.isRest()) {
-            throw new IllegalArgumentException(
-                "RestSpecParser only handles REST-based specs (OpenAPI/Swagger), got: " + specType
-            );
-        }
-    }
+        if (openAPI != null) {
+            if (openAPI.getPaths() == null) {
+                System.out.println("No paths found.");
+                return;
+            }
 
-    private void validateParseResult(SwaggerParseResult result) {
-        if (result.getMessages() != null && !result.getMessages().isEmpty()) {
-            String errors = String.join("; ", result.getMessages());
-            throw new SpecParseException("Failed to parse spec: " + errors);
-        }
+            // Extract endpoints
+            openAPI.getPaths().forEach((path, item) -> {
+                if (item == null) return;
 
-        if (result.getOpenAPI() == null) {
-            throw new SpecParseException("Failed to parse spec: result is null");
-        }
-    }
-
-    private String extractVersion(OpenAPI openAPI) {
-        if (openAPI.getInfo() != null && openAPI.getInfo().getVersion() != null) {
-            return openAPI.getInfo().getVersion();
-        }
-        return "1.0.0"; // Default version
-    }
-
-    private List<ParsedEndpoint> extractEndpoints(OpenAPI openAPI) {
-        List<ParsedEndpoint> endpoints = new ArrayList<>();
-
-        if (openAPI.getPaths() == null) {
-            return endpoints;
-        }
-
-        openAPI.getPaths().forEach((path, pathItem) -> {
-            pathItem.readOperationsMap().forEach((httpMethod, operation) -> {
-                ParsedRestEndpoint endpoint = createParsedEndpoint(path, httpMethod, operation);
-                endpoints.add(endpoint);
+                item.readOperationsMap().forEach((httpMethod, operation) -> {
+                    System.out.println(httpMethod.toString().toUpperCase() + " " + path);
+                });
             });
-        });
 
-        return endpoints;
-    }
-
-    private ParsedRestEndpoint createParsedEndpoint(String path,
-                                                     PathItem.HttpMethod httpMethod,
-                                                     Operation operation) {
-        HttpMethod method = convertHttpMethod(httpMethod);
-        String summary = operation.getSummary() != null ? operation.getSummary() : "";
-        String operationId = operation.getOperationId();
-
-        ParsedRestEndpoint endpoint = new ParsedRestEndpoint(method, path, summary, operationId);
-        endpoint.setDetailsAsJson(serializeOperation(operation));
-
-        return endpoint;
-    }
-
-    private HttpMethod convertHttpMethod(PathItem.HttpMethod swaggerMethod) {
-        return HttpMethod.valueOf(swaggerMethod.name());
-    }
-
-    private String serializeOperation(Operation operation) {
-        try {
-            return objectMapper.writeValueAsString(operation);
-        } catch (JsonProcessingException e) {
-            // If serialization fails, return minimal JSON
-            return "{}";
+            return;
         }
+
+        System.out.println("Spec is not valid OpenAPI 3 (or failed to parse).");
     }
+
 }
+

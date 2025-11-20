@@ -8,7 +8,7 @@ import java.util.*;
  * Base HTTP request with method, URL, query parameters, headers, and body.
  * @param <B> the type of body
  */
-public class HttpRequest<B extends Body> {
+public abstract class HttpRequest<B extends Body> {
 
     private HttpMethod method;
     private String url;

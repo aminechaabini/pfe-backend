@@ -1,7 +1,7 @@
 package com.example.demo.orchestrator.api;
 
 import com.example.demo.orchestrator.api.dto.*;
-import com.example.demo.orchestrator.app.service.ProjectService;
+import com.example.demo.orchestrator.application.service.ProjectService;
 import com.example.demo.orchestrator.domain.project.Project;
 import com.example.demo.orchestrator.domain.test.test_suite.TestSuite;
 import org.springframework.http.HttpStatus;

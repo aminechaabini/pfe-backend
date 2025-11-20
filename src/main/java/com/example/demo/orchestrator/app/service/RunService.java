@@ -2,15 +2,15 @@ package com.example.demo.orchestrator.app.service;
 
 
 import com.example.demo.orchestrator.app.mapper.run.RunRequestMapper;
-import com.example.demo.orchestrator.persistence.entity.project.ProjectEntity;
-import com.example.demo.orchestrator.persistence.entity.test.E2eTestEntity;
-import com.example.demo.orchestrator.persistence.entity.test.RestApiTestEntity;
-import com.example.demo.orchestrator.persistence.entity.test.SoapApiTestEntity;
-import com.example.demo.orchestrator.persistence.entity.test.TestCaseEntity;
-import com.example.demo.orchestrator.persistence.entity.test.TestSuiteEntity;
-import com.example.demo.orchestrator.persistence.repository.ProjectRepository;
-import com.example.demo.orchestrator.persistence.repository.TestCaseRepository;
-import com.example.demo.orchestrator.persistence.repository.TestSuiteRepository;
+import com.example.demo.orchestrator.infrastructure.persistence.entity.project.ProjectEntity;
+import com.example.demo.orchestrator.infrastructure.persistence.entity.test.E2eTestEntity;
+import com.example.demo.orchestrator.infrastructure.persistence.entity.test.RestApiTestEntity;
+import com.example.demo.orchestrator.infrastructure.persistence.entity.test.SoapApiTestEntity;
+import com.example.demo.orchestrator.infrastructure.persistence.entity.test.TestCaseEntity;
+import com.example.demo.orchestrator.infrastructure.persistence.entity.test.TestSuiteEntity;
+import com.example.demo.orchestrator.infrastructure.persistence.jpa.ProjectRepository;
+import com.example.demo.orchestrator.infrastructure.persistence.jpa.TestCaseRepository;
+import com.example.demo.orchestrator.infrastructure.persistence.jpa.TestSuiteRepository;
 import com.example.demo.orchestrator.persistence.run.Run;
 import com.example.demo.orchestrator.dto.run.TriggerRunRequest;
 import com.example.demo.orchestrator.infra.RunRepository;

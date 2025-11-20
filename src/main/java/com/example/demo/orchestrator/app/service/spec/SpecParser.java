@@ -22,5 +22,5 @@ public interface SpecParser {
      * @return parsed specification with extracted endpoints
      * @throws SpecParseException if parsing fails
      */
-    ParsedSpec parse(String content, SpecType specType);
+    ParsedSpec parse(String content);
 }

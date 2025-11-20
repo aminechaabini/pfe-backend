@@ -13,9 +13,9 @@ import com.example.demo.orchestrator.domain.test.e2e.E2eStep;
 import com.example.demo.orchestrator.domain.test.e2e.E2eTest;
 import com.example.demo.orchestrator.domain.test.request.RestRequest;
 import com.example.demo.orchestrator.domain.test.request.SoapRequest;
-import com.example.demo.orchestrator.persistence.entity.test.*;
-import com.example.demo.orchestrator.persistence.repository.TestCaseRepository;
-import com.example.demo.orchestrator.persistence.repository.TestSuiteRepository;
+import com.example.demo.orchestrator.infrastructure.persistence.entity.test.*;
+import com.example.demo.orchestrator.infrastructure.persistence.jpa.TestCaseRepository;
+import com.example.demo.orchestrator.infrastructure.persistence.jpa.TestSuiteRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

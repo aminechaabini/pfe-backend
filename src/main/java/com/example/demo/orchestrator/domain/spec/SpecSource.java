@@ -58,13 +58,15 @@ public class SpecSource {
         this.updatedAt = this.createdAt;
     }
 
+
+
     /**
      * Factory method to create a new SpecSource.
      *
-     * @param name user-friendly name (required, will be trimmed)
+     * @param name     user-friendly name (required, will be trimmed)
      * @param fileName original file name (required)
      * @param specType type of specification
-     * @param content full spec content (required, immutable)
+     * @param content  full spec content (required, immutable)
      * @return new SpecSource instance
      * @throws IllegalArgumentException if validation fails
      */
@@ -86,11 +88,11 @@ public class SpecSource {
     public void addEndpoint(Endpoint endpoint) {
         Objects.requireNonNull(endpoint, "Endpoint cannot be null");
 
-        // Check for duplicate (same method + path)
-        if (hasEndpoint(endpoint.getMethod(), endpoint.getPath())) {
+        // Check for duplicate using unique key
+        if (hasEndpoint(endpoint.getUniqueKey())) {
             throw new IllegalArgumentException(
-                    String.format("Endpoint already exists: %s %s",
-                            endpoint.getMethod(), endpoint.getPath())
+                    String.format("Endpoint already exists: %s",
+                            endpoint.getDisplayName())
             );
         }
 
@@ -99,19 +101,19 @@ public class SpecSource {
     }
 
     /**
-     * Check if this spec contains an endpoint with the given method and path.
+     * Check if this spec contains an endpoint with the given unique key.
      */
-    public boolean hasEndpoint(HttpMethod method, String path) {
+    public boolean hasEndpoint(String uniqueKey) {
         return endpoints.stream()
-                .anyMatch(e -> e.getMethod().equals(method) && e.getPath().equals(path));
+                .anyMatch(e -> e.getUniqueKey().equals(uniqueKey));
     }
 
     /**
-     * Find an endpoint by method and path.
+     * Find an endpoint by unique key.
      */
-    public Optional<Endpoint> findEndpoint(HttpMethod method, String path) {
+    public Optional<Endpoint> findEndpoint(String uniqueKey) {
         return endpoints.stream()
-                .filter(e -> e.getMethod().equals(method) && e.getPath().equals(path))
+                .filter(e -> e.getUniqueKey().equals(uniqueKey))
                 .findFirst();
     }
 
@@ -124,11 +126,22 @@ public class SpecSource {
     }
 
     /**
-     * Get endpoints filtered by HTTP method.
+     * Get REST endpoints only.
      */
-    public List<Endpoint> getEndpointsByMethod(HttpMethod method) {
+    public List<RestEndpoint> getRestEndpoints() {
         return endpoints.stream()
-                .filter(e -> e.getMethod().equals(method))
+                .filter(e -> e instanceof RestEndpoint)
+                .map(e -> (RestEndpoint) e)
+                .toList();
+    }
+
+    /**
+     * Get SOAP endpoints only.
+     */
+    public List<SoapEndpoint> getSoapEndpoints() {
+        return endpoints.stream()
+                .filter(e -> e instanceof SoapEndpoint)
+                .map(e -> (SoapEndpoint) e)
                 .toList();
     }
 
@@ -273,3 +286,4 @@ public class SpecSource {
     private void touch() {
         this.updatedAt = Instant.now();
     }
+}
