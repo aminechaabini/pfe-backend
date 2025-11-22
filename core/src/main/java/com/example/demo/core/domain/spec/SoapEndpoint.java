@@ -1,11 +1,44 @@
 package com.example.demo.core.domain.spec;
 
+import java.time.Instant;
+
 public class SoapEndpoint extends Endpoint {
     // SOAP-specific fields
     private String serviceName;    // OrderService
     private String operationName;  // getOrderById
     private String soapAction;     // optional
     private SoapVersion version;   // 1.1 or 1.2
+
+    /**
+     * Reconstitute SoapEndpoint from persistence (use in mappers only).
+     */
+    public static SoapEndpoint reconstitute(
+            Long id,
+            String serviceName,
+            String operationName,
+            SoapVersion soapVersion,
+            String soapAction,
+            String summary,
+            String operationId,
+            Long specSourceId,
+            Long projectId,
+            Instant createdAt,
+            Instant updatedAt) {
+
+        SoapEndpoint endpoint = new SoapEndpoint();
+        endpoint.id = id;
+        endpoint.serviceName = serviceName;
+        endpoint.operationName = operationName;
+        endpoint.version = soapVersion;
+        endpoint.soapAction = soapAction;
+        endpoint.summary = summary;
+        endpoint.operationId = operationId;
+        endpoint.specSourceId = specSourceId;
+        endpoint.projectId = projectId;
+        endpoint.createdAt = createdAt;
+        endpoint.updatedAt = updatedAt;
+        return endpoint;
+    }
 
     // Implementations from spec
     @Override

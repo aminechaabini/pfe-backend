@@ -75,10 +75,10 @@ public class TestSuiteService {
         TestSuite testSuite = new TestSuite(
                 request.name(),
                 request.description(),
-                variables,
-                List.of(),  // Empty test cases initially
-                endpoint
+                request.projectId()
         );
+
+
 
         // Save test suite
         testSuite = testSuiteRepository.save(testSuite);

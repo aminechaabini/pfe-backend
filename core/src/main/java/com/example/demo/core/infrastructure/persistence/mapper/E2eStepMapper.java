@@ -1,66 +1,61 @@
 package com.example.demo.core.infrastructure.persistence.mapper;
 
+import com.example.demo.core.domain.test.assertion.Assertion;
 import com.example.demo.core.domain.test.e2e.E2eStep;
 import com.example.demo.core.domain.test.e2e.ExtractorItem;
 import com.example.demo.core.domain.test.request.HttpRequest;
 import com.example.demo.core.infrastructure.persistence.entity.test.E2eStepEntity;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.mapstruct.*;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * MapStruct mapper for E2eStep ↔ E2eStepEntity.
  *
- * Handles JSON serialization of HttpRequest and extractors.
+ * Handles JSON serialization of HttpRequest and extractors using JsonConverter.
  */
-@Mapper(componentModel = "spring", uses = {AssertionMapper.class})
+@Mapper(componentModel = "spring", uses = {AssertionMapper.class, JsonConverter.class})
 public abstract class E2eStepMapper {
 
-    @Autowired
-    protected ObjectMapper objectMapper;
+    protected JsonConverter jsonConverter;
+    protected AssertionMapper assertionMapper;
 
     /**
-     * Convert entity to domain.
+     * Convert entity to domain using reconstitution.
+     * Deserializes JSON fields and preserves full state.
      */
-    @Mapping(target = "httpRequest", ignore = true) // Handled in afterMapping
-    @Mapping(target = "extractorItems", ignore = true) // Handled in afterMapping
-    @Mapping(target = "assertions", source = "assertions")
-    public abstract E2eStep toDomain(E2eStepEntity entity);
-
-    /**
-     * Deserialize request and extractors from JSON.
-     */
-    @AfterMapping
-    protected void deserializeJsonFields(@MappingTarget E2eStep step, E2eStepEntity entity) {
-        // Deserialize request
-        if (entity.getHttpRequestJson() != null && !entity.getHttpRequestJson().isBlank()) {
-            try {
-                @SuppressWarnings("unchecked")
-                HttpRequest request = objectMapper.readValue(
-                    entity.getHttpRequestJson(),
-                    HttpRequest.class
-                );
-                step.setHttpRequest(request);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException("Failed to deserialize HttpRequest from JSON", e);
-            }
+    public E2eStep toDomain(E2eStepEntity entity) {
+        if (entity == null) {
+            return null;
         }
 
-        // Deserialize extractors
-        if (entity.getExtractorsJson() != null && !entity.getExtractorsJson().isBlank()) {
-            try {
-                ExtractorItem[] extractors = objectMapper.readValue(
-                    entity.getExtractorsJson(),
-                    ExtractorItem[].class
-                );
-                for (ExtractorItem extractor : extractors) {
-                    step.addExtractor(extractor);
-                }
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException("Failed to deserialize ExtractorItem from JSON", e);
-            }
+        // Deserialize request using JsonConverter
+        HttpRequest httpRequest = jsonConverter.jsonToHttpRequest(entity.getHttpRequestJson());
+
+        // Deserialize extractors using JsonConverter
+        List<ExtractorItem> extractors = jsonConverter.jsonToExtractorItems(entity.getExtractorsJson());
+
+        // Map assertions
+        List<Assertion> assertions = null;
+        if (entity.getAssertions() != null) {
+            assertions = entity.getAssertions().stream()
+                .map(assertionMapper::toDomain)
+                .collect(Collectors.toList());
         }
+
+        return E2eStep.reconstitute(
+            entity.getId(),
+            entity.getName(),
+            entity.getDescription(),
+            entity.getOrderIndex(),
+            httpRequest,
+            assertions,
+            extractors,
+            entity.getCreatedAt(),
+            entity.getUpdatedAt()
+        );
     }
 
     /**
@@ -77,39 +72,17 @@ public abstract class E2eStepMapper {
      */
     @AfterMapping
     protected void serializeJsonFieldsAndAssertions(@MappingTarget E2eStepEntity entity, E2eStep domain) {
-        // Serialize request
-        if (domain.getHttpRequest() != null) {
-            try {
-                String requestJson = objectMapper.writeValueAsString(domain.getHttpRequest());
-                entity.setHttpRequestJson(requestJson);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException("Failed to serialize HttpRequest to JSON", e);
-            }
-        }
+        // Serialize request using JsonConverter
+        entity.setHttpRequestJson(jsonConverter.httpRequestToJson(domain.getHttpRequest()));
 
-        // Serialize extractors
-        if (domain.getExtractorItems() != null && !domain.getExtractorItems().isEmpty()) {
-            try {
-                String extractorsJson = objectMapper.writeValueAsString(domain.getExtractorItems());
-                entity.setExtractorsJson(extractorsJson);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException("Failed to serialize ExtractorItem to JSON", e);
-            }
-        }
+        // Serialize extractors using JsonConverter
+        entity.setExtractorsJson(jsonConverter.extractorItemsToJson(domain.getExtractorItems()));
 
         // Map assertions
         if (domain.getAssertions() != null) {
             domain.getAssertions().forEach(assertion -> {
-                entity.addAssertion(toAssertionEntity(assertion));
+                entity.addAssertion(assertionMapper.toEntity(assertion));
             });
         }
-    }
-
-    @Autowired
-    protected AssertionMapper assertionMapper;
-
-    protected com.example.demo.core.infrastructure.persistence.entity.test.AssertionEntity toAssertionEntity(
-            com.example.demo.core.domain.test.assertion.Assertion assertion) {
-        return assertionMapper.toEntity(assertion);
     }
 }

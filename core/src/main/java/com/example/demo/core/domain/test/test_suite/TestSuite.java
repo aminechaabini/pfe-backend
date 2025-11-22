@@ -19,20 +19,52 @@ public class TestSuite {
     private String description;
     private final Map<String, String> variables = new HashMap<>();
     private final List<TestCase> testCases = new ArrayList<>();
+    private Long projectId;  // Reference to owning project
+    private Long endpointId;  // Reference to associated endpoint (optional)
     private Endpoint endpoint;
     private final Instant createdAt;
     protected Instant updatedAt;
 
-    public TestSuite(String name, String description, Map<String, String> variables, List<TestCase> testCases, Endpoint endpoint) {
+    public TestSuite(String name, String description, Long projectId) {
         validateName(name);
         this.name = name.trim();
         validateDescription(description);
         this.description = description == null ? "" : description.trim();
-        this.variables.putAll(variables);
-        this.testCases.addAll(testCases);
-        this.endpoint = endpoint;
+        this.projectId = Objects.requireNonNull(projectId, "Project ID cannot be null");
         this.createdAt = Instant.now();
         this.updatedAt = this.createdAt;
+    }
+
+    /**
+     * Reconstitute TestSuite from persistence (use in mappers only).
+     * Bypasses validation since data is already persisted.
+     */
+    public static TestSuite reconstitute(
+            Long id,
+            String name,
+            String description,
+            Map<String, String> variables,
+            Long projectId,
+            Long endpointId,
+            Instant createdAt,
+            Instant updatedAt) {
+
+        TestSuite suite = new TestSuite(name, description, projectId, createdAt, updatedAt);
+        suite.id = id;
+        suite.endpointId = endpointId;
+        if (variables != null) {
+            suite.variables.putAll(variables);
+        }
+        return suite;
+    }
+
+    // Private constructor for reconstitution
+    private TestSuite(String name, String description, Long projectId, Instant createdAt, Instant updatedAt) {
+        this.name = name;
+        this.description = description;
+        this.projectId = projectId;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
     // Getters
@@ -73,6 +105,14 @@ public class TestSuite {
 
     public Endpoint getEndpoint() {
         return endpoint;
+    }
+
+    public Long getProjectId() {
+        return projectId;
+    }
+
+    public Long getEndpointId() {
+        return endpointId;
     }
 
     /**

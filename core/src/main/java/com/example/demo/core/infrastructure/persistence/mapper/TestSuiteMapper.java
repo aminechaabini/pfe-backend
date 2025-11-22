@@ -9,31 +9,35 @@ import org.mapstruct.*;
  *
  * Note: TestCases collection should be loaded separately to avoid circular references.
  */
-@Mapper(componentModel = "spring", uses = {EndpointMapper.class})
+@Mapper(componentModel = "spring", uses = {EndpointMapper.class, TestCaseMapper.class})
 public interface TestSuiteMapper {
 
     /**
-     * Convert entity to domain.
+     * Convert entity to domain using reconstitution.
+     * Preserves full entity state including identity and timestamps.
      */
-    @Mapping(target = "testCases", ignore = true) // Load separately
-    @Mapping(target = "endpoint", ignore = true) // No getter/setter in domain
-    TestSuite toDomain(TestSuiteEntity entity);
-
-    /**
-     * Copy variables after mapping.
-     */
-    @AfterMapping
-    default void copyVariables(@MappingTarget TestSuite domain, TestSuiteEntity entity) {
-        if (entity.getVariables() != null) {
-            entity.getVariables().forEach(domain::setVariable);
+    default TestSuite toDomain(TestSuiteEntity entity) {
+        if (entity == null) {
+            return null;
         }
+
+        return TestSuite.reconstitute(
+            entity.getId(),
+            entity.getName(),
+            entity.getDescription(),
+            entity.getVariables(),
+            entity.getProject() != null ? entity.getProject().getId() : null,
+            entity.getEndpoint() != null ? entity.getEndpoint().getId() : null,
+            entity.getCreatedAt(),
+            entity.getUpdatedAt()
+        );
     }
 
     /**
      * Convert domain to entity.
      */
-    @Mapping(target = "testCases", ignore = true) // Managed by JPA relationship
-    @Mapping(target = "endpoint", ignore = true) // No getter/setter in domain
+    @Mapping(target = "project", ignore = true)   // Set by repository before save
+    @Mapping(target = "endpoint", ignore = true)  // Set by repository before save
     TestSuiteEntity toEntity(TestSuite domain);
 
     /**
@@ -42,18 +46,7 @@ public interface TestSuiteMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "project", ignore = true)
-    @Mapping(target = "testCases", ignore = true)
-    @Mapping(target = "endpoint", ignore = true)
+    @Mapping(target = "endpoint", ignore = true)  // Set by repository before save
     void updateEntityFromDomain(@MappingTarget TestSuiteEntity entity, TestSuite domain);
 
-    /**
-     * Update variables map.
-     */
-    @AfterMapping
-    default void updateVariables(@MappingTarget TestSuiteEntity entity, TestSuite domain) {
-        entity.getVariables().clear();
-        if (domain.getVariables() != null) {
-            entity.getVariables().putAll(domain.getVariables());
-        }
-    }
 }

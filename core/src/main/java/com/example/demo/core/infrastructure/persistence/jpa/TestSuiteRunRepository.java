@@ -170,18 +170,4 @@ public interface TestSuiteRunRepository extends JpaRepository<TestSuiteRunEntity
     List<TestSuiteRunEntity> findStuckRuns(
             @Param("status") RunStatus status,
             @Param("threshold") Instant threshold);
-
-    /**
-     * Gets average execution duration for a test suite.
-     * Returns average time in milliseconds.
-     *
-     * @param testSuiteId the test suite ID
-     * @return average duration in milliseconds, null if no completed runs
-     */
-    @Query("SELECT AVG(r.completedAt - r.startedAt) FROM TestSuiteRunEntity r " +
-           "WHERE r.testSuite.id = :testSuiteId " +
-           "AND r.status = 'COMPLETED' " +
-           "AND r.startedAt IS NOT NULL " +
-           "AND r.completedAt IS NOT NULL")
-    Double getAverageDuration(@Param("testSuiteId") Long testSuiteId);
 }

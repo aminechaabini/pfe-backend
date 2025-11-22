@@ -1,9 +1,38 @@
 package com.example.demo.core.domain.spec;
 
+import java.time.Instant;
+
 public class RestEndpoint extends Endpoint {
     // REST-specific fields
     private HttpMethod method; // GET, POST, etc.
     private String path;       // /api/orders/{id}
+
+    /**
+     * Reconstitute RestEndpoint from persistence (use in mappers only).
+     */
+    public static RestEndpoint reconstitute(
+            Long id,
+            HttpMethod method,
+            String path,
+            String summary,
+            String operationId,
+            Long specSourceId,
+            Long projectId,
+            Instant createdAt,
+            Instant updatedAt) {
+
+        RestEndpoint endpoint = new RestEndpoint();
+        endpoint.id = id;
+        endpoint.method = method;
+        endpoint.path = path;
+        endpoint.summary = summary;
+        endpoint.operationId = operationId;
+        endpoint.specSourceId = specSourceId;
+        endpoint.projectId = projectId;
+        endpoint.createdAt = createdAt;
+        endpoint.updatedAt = updatedAt;
+        return endpoint;
+    }
 
     // Implementations from spec
     @Override

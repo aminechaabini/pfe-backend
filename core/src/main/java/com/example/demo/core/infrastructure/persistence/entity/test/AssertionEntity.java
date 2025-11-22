@@ -20,7 +20,7 @@ import jakarta.persistence.*;
  */
 @Entity
 @Table(name = "assertions")
-public class AssertionEntity extends BaseEntity {
+public class AssertionEntity extends BaseEntity{
 
     /**
      * Type of assertion (e.g., STATUS_EQUALS, JSONPATH_EQUALS, etc.)
@@ -103,7 +103,6 @@ public class AssertionEntity extends BaseEntity {
     @Override
     public String toString() {
         return "AssertionEntity{" +
-                "id=" + getId() +
                 ", type=" + type +
                 ", target='" + target + '\'' +
                 ", expected='" + expected + '\'' +

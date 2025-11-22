@@ -2,7 +2,11 @@ package com.example.demo.core.infrastructure.persistence.entity.spec;
 
 import com.example.demo.core.domain.spec.EndpointType;
 import com.example.demo.core.domain.spec.HttpMethod;
+import com.example.demo.core.infrastructure.persistence.entity.project.ProjectEntity;
+import com.example.demo.core.infrastructure.persistence.entity.test.TestSuiteEntity;
 import jakarta.persistence.*;
+
+import java.util.Set;
 
 /**
  * Persistence entity for REST endpoints.
@@ -25,13 +29,12 @@ public class RestEndpointEntity extends EndpointEntity {
 
     // Constructors
 
-    public RestEndpointEntity() {
-    }
-
-    public RestEndpointEntity(HttpMethod method, String path) {
+    public RestEndpointEntity(String summary, String operationId, String specDetails, SpecSourceEntity specSource, ProjectEntity project, Set<TestSuiteEntity> testSuites, HttpMethod method, String path) {
+        super(summary, operationId, specDetails, specSource, project, testSuites);
         this.method = method;
         this.path = path;
     }
+
 
     // Getters and Setters
 

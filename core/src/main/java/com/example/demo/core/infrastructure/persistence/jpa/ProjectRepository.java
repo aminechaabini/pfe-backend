@@ -19,6 +19,7 @@ import java.util.Optional;
  * - Search and filter projects
  * - Load projects with relationships (test suites, spec sources, endpoints)
  */
+
 @Repository
 public interface ProjectRepository extends JpaRepository<ProjectEntity, Long> {
 

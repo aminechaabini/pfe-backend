@@ -5,6 +5,7 @@ import com.example.demo.core.domain.test.assertion.Assertion;
 import com.example.demo.core.domain.test.request.HttpRequest;
 import com.example.demo.core.domain.test.request.body.Body;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -23,6 +24,14 @@ public abstract class ApiTest<R extends HttpRequest<? extends Body>> extends Tes
 
     protected ApiTest(String name, String description) {
         super(name, description);
+    }
+
+    /**
+     * Protected constructor for reconstitution by subclasses.
+     * Bypasses validation.
+     */
+    protected ApiTest(Long id, String name, String description, Instant createdAt, Instant updatedAt) {
+        super(id, name, description, createdAt, updatedAt);
     }
 
     // Getters
@@ -73,5 +82,21 @@ public abstract class ApiTest<R extends HttpRequest<? extends Body>> extends Tes
      */
     public int getAssertionCount() {
         return assertions.size();
+    }
+
+    /**
+     * Internal method for setting request during reconstitution (bypasses validation and touch).
+     */
+    protected void setRequestInternal(R request) {
+        this.request = request;
+    }
+
+    /**
+     * Internal method for adding assertions during reconstitution (bypasses validation and touch).
+     */
+    protected void addAssertionsInternal(List<Assertion> assertions) {
+        if (assertions != null) {
+            this.assertions.addAll(assertions);
+        }
     }
 }

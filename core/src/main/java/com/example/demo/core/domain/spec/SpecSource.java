@@ -74,6 +74,37 @@ public class SpecSource {
         return new SpecSource(name, fileName, specType, content);
     }
 
+    /**
+     * Reconstitute SpecSource from persistence (use in mappers only).
+     * Bypasses validation since data is already persisted.
+     */
+    public static SpecSource reconstitute(
+            Long id,
+            String name,
+            String fileName,
+            SpecType specType,
+            String content,
+            String version,
+            Instant createdAt,
+            Instant updatedAt) {
+
+        SpecSource spec = new SpecSource(name, fileName, specType, content, createdAt, updatedAt);
+        spec.id = id;
+        spec.version = version;
+        return spec;
+    }
+
+    // Private constructor for reconstitution
+    private SpecSource(String name, String fileName, SpecType specType, String content,
+                       Instant createdAt, Instant updatedAt) {
+        this.name = name;
+        this.fileName = fileName;
+        this.specType = specType;
+        this.content = content;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
     // ========================================================================
     // AGGREGATE ROOT METHODS - Endpoint Management
     // ========================================================================

@@ -6,72 +6,120 @@ import com.example.demo.core.domain.spec.SoapEndpoint;
 import com.example.demo.core.infrastructure.persistence.entity.spec.EndpointEntity;
 import com.example.demo.core.infrastructure.persistence.entity.spec.RestEndpointEntity;
 import com.example.demo.core.infrastructure.persistence.entity.spec.SoapEndpointEntity;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
-/**
- * Polymorphic mapper for Endpoint hierarchy.
- *
- * Delegates to specific mappers based on endpoint type (REST/SOAP).
- */
-@Component
-public class EndpointMapper {
+@Mapper(componentModel = "spring", uses = {})
+public interface EndpointMapper {
 
-    private final RestEndpointMapper restEndpointMapper;
-    private final SoapEndpointMapper soapEndpointMapper;
-
-    public EndpointMapper(
-            RestEndpointMapper restEndpointMapper,
-            SoapEndpointMapper soapEndpointMapper) {
-        this.restEndpointMapper = restEndpointMapper;
-        this.soapEndpointMapper = soapEndpointMapper;
+    // Polymorphic mapping - manual dispatching to concrete methods
+    default Endpoint toDomain(EndpointEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+        if (entity instanceof RestEndpointEntity) {
+            return toDomain((RestEndpointEntity) entity);
+        } else if (entity instanceof SoapEndpointEntity) {
+            return toDomain((SoapEndpointEntity) entity);
+        }
+        throw new IllegalArgumentException("Unknown entity type: " + entity.getClass());
     }
 
-    /**
-     * Convert entity to domain (polymorphic).
-     */
-    public Endpoint toDomain(EndpointEntity entity) {
+    default SoapEndpoint toDomain(SoapEndpointEntity entity){
         if (entity == null) {
             return null;
         }
 
-        return switch (entity) {
-            case RestEndpointEntity restEntity -> restEndpointMapper.toDomain(restEntity);
-            case SoapEndpointEntity soapEntity -> soapEndpointMapper.toDomain(soapEntity);
-            default -> throw new IllegalArgumentException("Unknown endpoint type: " + entity.getClass());
-        };
+        return SoapEndpoint.reconstitute(
+                entity.getId(),
+                entity.getServiceName(),
+                entity.getOperationName(),
+                entity.getVersion(),
+                entity.getSoapAction(),
+                entity.getSummary(),
+                entity.getOperationId(),
+                entity.getSpecSource() != null ? entity.getSpecSource().getId() : null,
+                entity.getProject() != null ? entity.getProject().getId() : null,
+                entity.getCreatedAt(),
+                entity.getUpdatedAt()
+        );
     }
 
-    /**
-     * Convert domain to entity (polymorphic).
-     */
-    public EndpointEntity toEntity(Endpoint domain) {
-        if (domain == null) {
+
+    default RestEndpoint toDomain(RestEndpointEntity entity){
+        if (entity == null) {
             return null;
         }
 
-        return switch (domain) {
-            case RestEndpoint restEndpoint -> restEndpointMapper.toEntity(restEndpoint);
-            case SoapEndpoint soapEndpoint -> soapEndpointMapper.toEntity(soapEndpoint);
-            default -> throw new IllegalArgumentException("Unknown endpoint type: " + domain.getClass());
-        };
+        return RestEndpoint.reconstitute(
+                entity.getId(),
+                entity.getMethod(),
+                entity.getPath(),
+                entity.getSummary(),
+                entity.getOperationId(),
+                entity.getSpecSource() != null ? entity.getSpecSource().getId() : null,
+                entity.getProject() != null ? entity.getProject().getId() : null,
+                entity.getCreatedAt(),
+                entity.getUpdatedAt()
+
+        );
     }
 
-    /**
-     * Update existing entity from domain (polymorphic).
-     */
-    public void updateEntityFromDomain(EndpointEntity entity, Endpoint domain) {
+
+
+    // Polymorphic mapping to entity - manual dispatching to concrete methods
+    default EndpointEntity toEntity(Endpoint endpoint) {
+        if (endpoint == null) {
+            return null;
+        }
+        if (endpoint instanceof RestEndpoint) {
+            return toEntity((RestEndpoint) endpoint);
+        } else if (endpoint instanceof SoapEndpoint) {
+            return toEntity((SoapEndpoint) endpoint);
+        }
+        throw new IllegalArgumentException("Unknown endpoint type: " + endpoint.getClass());
+    }
+
+    @Mapping(target = "specSource", ignore = true)  // Set by repository
+    @Mapping(target = "project", ignore = true)     // Set by repository
+    @Mapping(target = "testSuites", ignore = true)   // Managed by JPA
+    SoapEndpointEntity toEntity(SoapEndpoint endpoint);
+
+    @Mapping(target = "specSource", ignore = true)  // Set by repository
+    @Mapping(target = "project", ignore = true)     // Set by repository
+    @Mapping(target = "testSuites", ignore = true)   // Managed by JPA
+    RestEndpointEntity toEntity(RestEndpoint endpoint);
+
+    // ===============================
+    // UPDATE ENTITY FROM DOMAIN
+    // ===============================
+    // Polymorphic update - manual dispatching to concrete methods
+    default void updateEntityFromDomain(@MappingTarget EndpointEntity entity, Endpoint domain) {
         if (entity == null || domain == null) {
             return;
         }
-
-        // Match entity and domain types
-        switch (entity) {
-            case RestEndpointEntity restEntity when domain instanceof RestEndpoint restDomain ->
-                    restEndpointMapper.updateEntityFromDomain(restEntity, restDomain);
-            case SoapEndpointEntity soapEntity when domain instanceof SoapEndpoint soapDomain ->
-                    soapEndpointMapper.updateEntityFromDomain(soapEntity, soapDomain);
-            default -> throw new IllegalArgumentException(
-                    "Type mismatch: entity=" + entity.getClass() + ", domain=" + domain.getClass());
+        if (entity instanceof RestEndpointEntity && domain instanceof RestEndpoint) {
+            updateEntityFromDomain((RestEndpointEntity) entity, (RestEndpoint) domain);
+        } else if (entity instanceof SoapEndpointEntity && domain instanceof SoapEndpoint) {
+            updateEntityFromDomain((SoapEndpointEntity) entity, (SoapEndpoint) domain);
+        } else {
+            throw new IllegalArgumentException("Entity type " + entity.getClass() +
+                " does not match domain type " + domain.getClass());
         }
     }
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "specSource", ignore = true)  // Set by repository
+    @Mapping(target = "project", ignore = true)     // Set by repository
+    @Mapping(target = "testSuites", ignore = true)   // Managed by JPA
+    void updateEntityFromDomain(@MappingTarget RestEndpointEntity entity, RestEndpoint domain);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "specSource", ignore = true)  // Set by repository
+    @Mapping(target = "project", ignore = true)     // Set by repository
+    @Mapping(target = "testSuites", ignore = true)   // Managed by JPA
+    void updateEntityFromDomain(@MappingTarget SoapEndpointEntity entity, SoapEndpoint domain);
 }

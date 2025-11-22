@@ -1,7 +1,6 @@
 package com.example.demo.core.app.service;
 
 import com.example.demo.core.app.service.exception.EntityNotFoundException;
-import com.example.demo.core.domain.project.Project;
 import com.example.demo.core.domain.run.TestCaseRun;
 import com.example.demo.core.domain.run.TestSuiteRun;
 import com.example.demo.core.domain.test.TestCase;
@@ -19,7 +18,6 @@ import com.example.demo.core.infrastructure.persistence.jpa.TestCaseRepository;
 import com.example.demo.core.infrastructure.persistence.jpa.TestCaseRunRepository;
 import com.example.demo.core.infrastructure.persistence.jpa.TestSuiteRepository;
 import com.example.demo.core.infrastructure.persistence.jpa.TestSuiteRunRepository;
-import com.example.demo.core.infrastructure.persistence.mapper.TestCaseMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;

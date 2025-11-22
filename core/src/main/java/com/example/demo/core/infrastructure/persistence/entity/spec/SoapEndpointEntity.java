@@ -2,7 +2,11 @@ package com.example.demo.core.infrastructure.persistence.entity.spec;
 
 import com.example.demo.core.domain.spec.EndpointType;
 import com.example.demo.core.domain.spec.SoapVersion;
+import com.example.demo.core.infrastructure.persistence.entity.project.ProjectEntity;
+import com.example.demo.core.infrastructure.persistence.entity.test.TestSuiteEntity;
 import jakarta.persistence.*;
+
+import java.util.Set;
 
 /**
  * Persistence entity for SOAP endpoints.
@@ -33,13 +37,14 @@ public class SoapEndpointEntity extends EndpointEntity {
 
     // Constructors
 
-    public SoapEndpointEntity() {
-    }
-
-    public SoapEndpointEntity(String serviceName, String operationName) {
+    public SoapEndpointEntity(String summary, String operationId, String specDetails, SpecSourceEntity specSource, ProjectEntity project, Set<TestSuiteEntity> testSuites, String serviceName, String operationName, String soapAction, SoapVersion version) {
+        super(summary, operationId, specDetails, specSource, project, testSuites);
         this.serviceName = serviceName;
         this.operationName = operationName;
+        this.soapAction = soapAction;
+        this.version = version;
     }
+
 
     // Getters and Setters
 

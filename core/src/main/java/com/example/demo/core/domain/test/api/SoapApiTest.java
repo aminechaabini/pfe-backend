@@ -3,6 +3,9 @@ package com.example.demo.core.domain.test.api;
 import com.example.demo.core.domain.test.assertion.Assertion;
 import com.example.demo.core.domain.test.request.SoapRequest;
 
+import java.time.Instant;
+import java.util.List;
+
 /**
  * Concrete implementation of ApiTest for SOAP API testing.
  * Type parameter ensures only SoapRequest instances can be used (compile-time safety).
@@ -12,6 +15,34 @@ public class SoapApiTest extends ApiTest<SoapRequest> {
 
     public SoapApiTest(String name, String description) {
         super(name, description);
+    }
+
+    /**
+     * Reconstitute SoapApiTest from persistence (use in mappers only).
+     * Bypasses validation since data is already persisted.
+     */
+    public static SoapApiTest reconstitute(
+            Long id,
+            String name,
+            String description,
+            SoapRequest request,
+            List<Assertion> assertions,
+            Instant createdAt,
+            Instant updatedAt) {
+
+        SoapApiTest test = new SoapApiTest(id, name, description, createdAt, updatedAt);
+        if (request != null) {
+            test.setRequestInternal(request);
+        }
+        if (assertions != null) {
+            test.addAssertionsInternal(assertions);
+        }
+        return test;
+    }
+
+    // Private constructor for reconstitution
+    private SoapApiTest(Long id, String name, String description, Instant createdAt, Instant updatedAt) {
+        super(id, name, description, createdAt, updatedAt);
     }
 
     /**

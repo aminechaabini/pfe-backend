@@ -23,6 +23,18 @@ public abstract class TestCase {
         this.updatedAt = this.createdAt;
     }
 
+    /**
+     * Protected constructor for reconstitution by subclasses.
+     * Bypasses validation.
+     */
+    protected TestCase(Long id, String name, String description, Instant createdAt, Instant updatedAt) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
     public Long getId() { 
         return id; 
     }

@@ -1,9 +1,11 @@
 package com.example.demo.core.api;
 
-import com.example.demo.core.api.dto.*;
 import com.example.demo.core.app.service.ExecutionService;
 import com.example.demo.core.domain.run.TestCaseRun;
 import com.example.demo.core.domain.run.TestSuiteRun;
+import com.example.demo.core.presentation.rest.dto.ExecutionResponse;
+import com.example.demo.core.presentation.rest.dto.TestCaseRunResponse;
+import com.example.demo.core.presentation.rest.dto.TestSuiteRunResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

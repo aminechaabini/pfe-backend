@@ -1,6 +1,5 @@
 package com.example.demo.core.api;
 
-import com.example.demo.core.api.dto.*;
 import com.example.demo.core.app.service.TestService;
 import com.example.demo.core.domain.test.TestCase;
 import com.example.demo.core.domain.test.api.RestApiTest;
@@ -8,6 +7,10 @@ import com.example.demo.core.domain.test.api.SoapApiTest;
 import com.example.demo.core.domain.test.assertion.Assertion;
 import com.example.demo.core.domain.test.e2e.E2eStep;
 import com.example.demo.core.domain.test.e2e.E2eTest;
+import com.example.demo.core.presentation.rest.dto.CreateE2eTestRequest;
+import com.example.demo.core.presentation.rest.dto.CreateRestTestRequest;
+import com.example.demo.core.presentation.rest.dto.CreateSoapTestRequest;
+import com.example.demo.core.presentation.rest.dto.TestCaseResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

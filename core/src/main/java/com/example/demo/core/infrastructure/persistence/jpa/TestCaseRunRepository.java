@@ -106,23 +106,6 @@ public interface TestCaseRunRepository extends JpaRepository<TestCaseRunEntity, 
     Double getSuccessRate(@Param("testCaseId") Long testCaseId);
 
     /**
-     * Finds the slowest test cases by average duration.
-     * Useful for identifying performance bottlenecks.
-     *
-     * @param pageable pagination (e.g., top 10)
-     * @return list of [TestCaseId, TestCaseName, AvgDuration] tuples
-     */
-    @Query("SELECT r.testCaseId, r.testCaseName, " +
-           "AVG(EXTRACT(EPOCH FROM (r.completedAt - r.startedAt)) * 1000) " +
-           "FROM TestCaseRunEntity r " +
-           "WHERE r.status = 'COMPLETED' " +
-           "AND r.startedAt IS NOT NULL " +
-           "AND r.completedAt IS NOT NULL " +
-           "GROUP BY r.testCaseId, r.testCaseName " +
-           "ORDER BY AVG(EXTRACT(EPOCH FROM (r.completedAt - r.startedAt))) DESC")
-    List<Object[]> findSlowestTests(Pageable pageable);
-
-    /**
      * Finds tests that fail most frequently.
      *
      * @param pageable pagination (e.g., top 10)

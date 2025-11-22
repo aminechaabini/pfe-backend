@@ -27,7 +27,7 @@ public class Project {
 
 
 
-    private Project(String name, String description, Map<String, String> ) {
+    private Project(String name, String description) {
         validateName(name);
         this.name = name.trim();
         validateDescription(description);
@@ -41,6 +41,34 @@ public class Project {
      */
     public static Project create(String name, String description) {
         return new Project(name, description);
+    }
+
+    /**
+     * Reconstitute project from persistence (use in mappers only).
+     * Bypasses validation since data is already persisted.
+     */
+    public static Project reconstitute(
+            Long id,
+            String name,
+            String description,
+            Map<String, String> variables,
+            Instant createdAt,
+            Instant updatedAt) {
+
+        Project project = new Project(name, description, createdAt, updatedAt);
+        project.id = id;
+        if (variables != null) {
+            project.variables.putAll(variables);
+        }
+        return project;
+    }
+
+    // Private constructor for reconstitution
+    private Project(String name, String description, Instant createdAt, Instant updatedAt) {
+        this.name = name;
+        this.description = description;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
     // Getters

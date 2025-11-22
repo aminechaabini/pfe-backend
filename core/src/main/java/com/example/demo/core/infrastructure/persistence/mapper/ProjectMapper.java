@@ -10,34 +10,32 @@ import org.mapstruct.*;
  * Since Project uses factory method and has no setters, toDomain() is implemented manually.
  * Collections (testSuites, specSources, endpoints) are managed separately by services.
  */
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {EndpointMapper.class, TestSuiteMapper.class, SpecSourceMapper.class})
 public interface ProjectMapper {
 
     /**
-     * Convert entity to domain using factory method.
-     * Manually implemented because Project has no public constructor.
+     * Convert entity to domain using reconstitution.
+     * Preserves full entity state including identity and timestamps.
      */
     default Project toDomain(ProjectEntity entity) {
         if (entity == null) {
             return null;
         }
-        Project project = Project.create(entity.getName(), entity.getDescription());
-        // MapStruct cannot set id, createdAt, updatedAt as there are no setters
-        // These must be set via reflection or left as is
 
-        // Copy variables using domain method
-        if (entity.getVariables() != null) {
-            entity.getVariables().forEach(project::setVariable);
-        }
-        return project;
+        return Project.reconstitute(
+            entity.getId(),
+            entity.getName(),
+            entity.getDescription(),
+            entity.getVariables(),
+            entity.getCreatedAt(),
+            entity.getUpdatedAt()
+        );
     }
 
     /**
      * Convert domain to entity.
      */
-    @Mapping(target = "testSuites", ignore = true)
-    @Mapping(target = "specSources", ignore = true)
-    @Mapping(target = "endpoints", ignore = true)
+
     ProjectEntity toEntity(Project domain);
 
     /**
@@ -45,20 +43,6 @@ public interface ProjectMapper {
      */
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "testSuites", ignore = true)
-    @Mapping(target = "specSources", ignore = true)
-    @Mapping(target = "endpoints", ignore = true)
-    @Mapping(target = "variables", ignore = true) // Handled in afterMapping
     void updateEntityFromDomain(@MappingTarget ProjectEntity entity, Project domain);
 
-    /**
-     * Update variables map.
-     */
-    @AfterMapping
-    default void updateVariables(@MappingTarget ProjectEntity entity, Project domain) {
-        entity.getVariables().clear();
-        if (domain.getVariables() != null) {
-            entity.getVariables().putAll(domain.getVariables());
-        }
-    }
 }

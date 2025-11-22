@@ -33,6 +33,15 @@ import java.util.Set;
 @DiscriminatorColumn(name = "endpoint_type", discriminatorType = DiscriminatorType.STRING, length = 10)
 public abstract class EndpointEntity extends BaseEntity {
 
+    public EndpointEntity(String summary, String operationId, String specDetails, SpecSourceEntity specSource, ProjectEntity project, Set<TestSuiteEntity> testSuites) {
+        this.summary = summary;
+        this.operationId = operationId;
+        this.specDetails = specDetails;
+        this.specSource = specSource;
+        this.project = project;
+        this.testSuites = testSuites;
+    }
+
     @Column(length = 500)
     private String summary;
 

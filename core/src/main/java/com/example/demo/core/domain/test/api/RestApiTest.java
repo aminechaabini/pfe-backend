@@ -4,6 +4,9 @@ import com.example.demo.core.domain.test.assertion.Assertion;
 import com.example.demo.core.domain.test.request.RestRequest;
 import com.example.demo.core.domain.test.request.body.Body;
 
+import java.time.Instant;
+import java.util.List;
+
 /**
  * Concrete implementation of ApiTest for REST API testing.
  * Type parameter ensures only RestRequest instances can be used (compile-time safety).
@@ -13,6 +16,34 @@ public class RestApiTest extends ApiTest<RestRequest> {
 
     public RestApiTest(String name, String description) {
         super(name, description);
+    }
+
+    /**
+     * Reconstitute RestApiTest from persistence (use in mappers only).
+     * Bypasses validation since data is already persisted.
+     */
+    public static RestApiTest reconstitute(
+            Long id,
+            String name,
+            String description,
+            RestRequest request,
+            List<Assertion> assertions,
+            Instant createdAt,
+            Instant updatedAt) {
+
+        RestApiTest test = new RestApiTest(id, name, description, createdAt, updatedAt);
+        if (request != null) {
+            test.setRequestInternal(request);
+        }
+        if (assertions != null) {
+            test.addAssertionsInternal(assertions);
+        }
+        return test;
+    }
+
+    // Private constructor for reconstitution
+    private RestApiTest(Long id, String name, String description, Instant createdAt, Instant updatedAt) {
+        super(id, name, description, createdAt, updatedAt);
     }
 
     /**

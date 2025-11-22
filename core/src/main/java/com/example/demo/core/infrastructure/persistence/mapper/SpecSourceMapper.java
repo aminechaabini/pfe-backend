@@ -10,33 +10,28 @@ import org.mapstruct.*;
  * SpecSource uses factory method create(), so toDomain() is manual.
  * Endpoints collection is managed separately.
  */
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {EndpointMapper.class})
 public interface SpecSourceMapper {
 
     /**
-     * Convert entity to domain using factory method.
-     * Note: Factory method signature is create(name, fileName, specType, content).
-     * fileName is required but may not be in entity, using name as fallback.
+     * Convert entity to domain using reconstitution.
+     * Preserves full entity state including identity and timestamps.
      */
     default SpecSource toDomain(SpecSourceEntity entity) {
         if (entity == null) {
             return null;
         }
-        // Factory method needs: name, fileName, specType, content
-        // fileName may not exist in entity, use name as fallback
-        String fileName = entity.getName() + ".spec";
-        SpecSource specSource = SpecSource.create(
+
+        return SpecSource.reconstitute(
+            entity.getId(),
             entity.getName(),
-            fileName,
+            entity.getFileName(),
             entity.getSpecType(),
-            entity.getContent()
+            entity.getContent(),
+            entity.getVersion(),
+            entity.getCreatedAt(),
+            entity.getUpdatedAt()
         );
-        // Set version if present
-        if (entity.getVersion() != null) {
-            specSource.setVersion(entity.getVersion());
-        }
-        // No setters for id, createdAt, updatedAt in domain
-        return specSource;
     }
 
     /**

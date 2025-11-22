@@ -60,6 +60,42 @@ public class E2eStep {
         this.updatedAt = this.createdAt;
     }
 
+    /**
+     * Reconstitute E2eStep from persistence (use in mappers only).
+     * Bypasses validation since data is already persisted.
+     */
+    public static E2eStep reconstitute(
+            Long id,
+            String name,
+            String description,
+            Integer orderIndex,
+            HttpRequest httpRequest,
+            List<Assertion> assertions,
+            List<ExtractorItem> extractors,
+            Instant createdAt,
+            Instant updatedAt) {
+
+        E2eStep step = new E2eStep(name, description, orderIndex, createdAt, updatedAt);
+        step.id = id;
+        step.httpRequest = httpRequest;
+        if (assertions != null) {
+            step.assertions.addAll(assertions);
+        }
+        if (extractors != null) {
+            step.extractorItems.addAll(extractors);
+        }
+        return step;
+    }
+
+    // Private constructor for reconstitution
+    private E2eStep(String name, String description, Integer orderIndex, Instant createdAt, Instant updatedAt) {
+        this.name = name;
+        this.description = description;
+        this.orderIndex = orderIndex;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
     // Identity getters/setters
     public Long getId() {
         return id;

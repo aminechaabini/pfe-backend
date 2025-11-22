@@ -2,6 +2,7 @@ package com.example.demo.core.domain.test.e2e;
 
 import com.example.demo.core.domain.test.TestCase;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -11,11 +12,35 @@ import java.util.Objects;
  * End-to-end test composed of multiple sequential steps.
  */
 public class E2eTest extends TestCase {
-    
+
     private final List<E2eStep> steps = new ArrayList<>();
 
     public E2eTest(String name, String description) {
         super(name, description);
+    }
+
+    /**
+     * Reconstitute E2eTest from persistence (use in mappers only).
+     * Bypasses validation since data is already persisted.
+     */
+    public static E2eTest reconstitute(
+            Long id,
+            String name,
+            String description,
+            List<E2eStep> steps,
+            Instant createdAt,
+            Instant updatedAt) {
+
+        E2eTest test = new E2eTest(id, name, description, createdAt, updatedAt);
+        if (steps != null) {
+            test.steps.addAll(steps);
+        }
+        return test;
+    }
+
+    // Private constructor for reconstitution
+    private E2eTest(Long id, String name, String description, Instant createdAt, Instant updatedAt) {
+        super(id, name, description, createdAt, updatedAt);
     }
 
     /**

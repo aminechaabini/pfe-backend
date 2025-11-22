@@ -1,8 +1,12 @@
 package com.example.demo.core.infrastructure.persistence.mapper;
 
+import com.example.demo.core.domain.test.e2e.E2eStep;
 import com.example.demo.core.domain.test.e2e.E2eTest;
 import com.example.demo.core.infrastructure.persistence.entity.test.E2eTestEntity;
 import org.mapstruct.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * MapStruct mapper for E2eTest ↔ E2eTestEntity.
@@ -11,10 +15,31 @@ import org.mapstruct.*;
 public interface E2eTestMapper {
 
     /**
-     * Convert entity to domain.
+     * Convert entity to domain using reconstitution.
+     * Maps steps using E2eStepMapper.
      */
-    @Mapping(target = "steps", source = "steps")
-    E2eTest toDomain(E2eTestEntity entity);
+    default E2eTest toDomain(E2eTestEntity entity, @Context E2eStepMapper stepMapper) {
+        if (entity == null) {
+            return null;
+        }
+
+        // Map steps
+        List<E2eStep> steps = null;
+        if (entity.getSteps() != null) {
+            steps = entity.getSteps().stream()
+                .map(stepMapper::toDomain)
+                .collect(Collectors.toList());
+        }
+
+        return E2eTest.reconstitute(
+            entity.getId(),
+            entity.getName(),
+            entity.getDescription(),
+            steps,
+            entity.getCreatedAt(),
+            entity.getUpdatedAt()
+        );
+    }
 
     /**
      * Convert domain to entity.
