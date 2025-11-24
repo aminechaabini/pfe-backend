@@ -1,6 +1,8 @@
 rootProject.name = 'api-testing-platform'
 
-include 'shared-contracts'
+include 'common'
 include 'core'
 include 'ai-generation-service'
 include 'test-execution-service'
+include 'ai-runner'
+include 'test-execution-runner'

@@ -1,6 +1,6 @@
 package com.example.demo.core.infrastructure.spec;
 
-import com.example.demo.core.app.service.spec.SpecParser;
+import com.example.demo.core.application.parser.SpecParser;
 import com.example.demo.core.domain.spec.SpecType;
 import org.springframework.stereotype.Component;
 

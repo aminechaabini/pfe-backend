@@ -37,7 +37,7 @@ public class XPathExtractor implements Extractor {
             DocumentBuilder builder = docFactory.newDocumentBuilder();
             Document doc = builder.parse(new ByteArrayInputStream(body.getBytes(StandardCharsets.UTF_8)));
 
-            String result = xpath.evaluate(spec.expression(), doc);
+            String result = xpath.evaluate(spec.expr(), doc);
             return result.isEmpty() ? null : result;
 
         } catch (Exception e) {

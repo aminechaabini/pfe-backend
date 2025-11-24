@@ -8,6 +8,33 @@ public class RestEndpoint extends Endpoint {
     private String path;       // /api/orders/{id}
 
     /**
+     * Create new RestEndpoint from parsed specification data.
+     */
+    public static RestEndpoint create(
+            HttpMethod method,
+            String path,
+            String name,
+            String summary,
+            String operationId,
+            String specDetails,
+            Long specSourceId,
+            Long projectId) {
+
+        RestEndpoint endpoint = new RestEndpoint();
+        endpoint.method = method;
+        endpoint.path = path;
+        endpoint.name = name != null ? name : (operationId != null ? operationId : method + " " + path);
+        endpoint.summary = summary;
+        endpoint.operationId = operationId;
+        endpoint.specDetails = specDetails;
+        endpoint.specSourceId = specSourceId;
+        endpoint.projectId = projectId;
+        endpoint.createdAt = Instant.now();
+        endpoint.updatedAt = Instant.now();
+        return endpoint;
+    }
+
+    /**
      * Reconstitute RestEndpoint from persistence (use in mappers only).
      */
     public static RestEndpoint reconstitute(

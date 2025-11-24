@@ -3,9 +3,10 @@ plugins {
     id("io.spring.dependency-management")
 }
 
+
 dependencies {
     // Inter-module dependencies
-    implementation(project(":shared-contracts"))
+    implementation(project(":common"))
 
     // Spring Boot Starters
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -32,16 +33,22 @@ dependencies {
 
     // HTTP Client for communicating with other services
     implementation("org.springframework.boot:spring-boot-starter-webflux")
+
+    // AI Generation Service - for test generation
+    implementation(project(":ai-generation-service"))
 }
 
 sourceSets {
     main {
         java {
-            exclude("com/example/demo/core/api")
-            exclude("com/example/demo/core/app")
-            exclude("com/example/demo/core/dto")
-            exclude("com/example/demo/core/infrastructure/spec")
-            exclude("com/example/demo/core/application/ports")
+            exclude("com.example.demo.core.api")
+            exclude("com.example.demo.core.app")
+            exclude("com.example.demo.core.dto")
+            exclude("com.example.demo.core.infrastructure.spec")
+
+
         }
     }
 }
+
+

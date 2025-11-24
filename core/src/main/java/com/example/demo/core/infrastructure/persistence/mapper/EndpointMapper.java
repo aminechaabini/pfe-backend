@@ -3,18 +3,29 @@ package com.example.demo.core.infrastructure.persistence.mapper;
 import com.example.demo.core.domain.spec.Endpoint;
 import com.example.demo.core.domain.spec.RestEndpoint;
 import com.example.demo.core.domain.spec.SoapEndpoint;
+import com.example.demo.core.infrastructure.persistence.entity.project.ProjectEntity;
 import com.example.demo.core.infrastructure.persistence.entity.spec.EndpointEntity;
 import com.example.demo.core.infrastructure.persistence.entity.spec.RestEndpointEntity;
 import com.example.demo.core.infrastructure.persistence.entity.spec.SoapEndpointEntity;
+import com.example.demo.core.infrastructure.persistence.entity.spec.SpecSourceEntity;
+import com.example.demo.core.infrastructure.persistence.jpa.ProjectRepository;
+import com.example.demo.core.infrastructure.persistence.jpa.SpecSourceRepository;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Mapper(componentModel = "spring", uses = {})
-public interface EndpointMapper {
+public abstract class EndpointMapper {
+
+    @Autowired
+    protected SpecSourceRepository specSourceRepository;
+
+    @Autowired
+    protected ProjectRepository projectRepository;
 
     // Polymorphic mapping - manual dispatching to concrete methods
-    default Endpoint toDomain(EndpointEntity entity) {
+    public Endpoint toDomain(EndpointEntity entity) {
         if (entity == null) {
             return null;
         }
@@ -26,7 +37,7 @@ public interface EndpointMapper {
         throw new IllegalArgumentException("Unknown entity type: " + entity.getClass());
     }
 
-    default SoapEndpoint toDomain(SoapEndpointEntity entity){
+    public SoapEndpoint toDomain(SoapEndpointEntity entity) {
         if (entity == null) {
             return null;
         }
@@ -47,7 +58,7 @@ public interface EndpointMapper {
     }
 
 
-    default RestEndpoint toDomain(RestEndpointEntity entity){
+    public RestEndpoint toDomain(RestEndpointEntity entity) {
         if (entity == null) {
             return null;
         }
@@ -69,7 +80,7 @@ public interface EndpointMapper {
 
 
     // Polymorphic mapping to entity - manual dispatching to concrete methods
-    default EndpointEntity toEntity(Endpoint endpoint) {
+    public EndpointEntity toEntity(Endpoint endpoint) {
         if (endpoint == null) {
             return null;
         }
@@ -81,21 +92,36 @@ public interface EndpointMapper {
         throw new IllegalArgumentException("Unknown endpoint type: " + endpoint.getClass());
     }
 
-    @Mapping(target = "specSource", ignore = true)  // Set by repository
-    @Mapping(target = "project", ignore = true)     // Set by repository
+    @Mapping(target = "specSource", expression = "java(mapSpecSourceEntityFromId(endpoint.getSpecSourceId()))")
+    @Mapping(target = "project", expression = "java(mapProjectEntityFromId(endpoint.getProjectId()))")
     @Mapping(target = "testSuites", ignore = true)   // Managed by JPA
-    SoapEndpointEntity toEntity(SoapEndpoint endpoint);
+    public abstract SoapEndpointEntity toEntity(SoapEndpoint endpoint);
 
-    @Mapping(target = "specSource", ignore = true)  // Set by repository
-    @Mapping(target = "project", ignore = true)     // Set by repository
+    @Mapping(target = "specSource", expression = "java(mapSpecSourceEntityFromId(endpoint.getSpecSourceId()))")
+    @Mapping(target = "project", expression = "java(mapProjectEntityFromId(endpoint.getProjectId()))")
     @Mapping(target = "testSuites", ignore = true)   // Managed by JPA
-    RestEndpointEntity toEntity(RestEndpoint endpoint);
+    public abstract RestEndpointEntity toEntity(RestEndpoint endpoint);
+
+    // Helper methods to map IDs to entities
+    protected SpecSourceEntity mapSpecSourceEntityFromId(Long id) {
+        if (id == null) {
+            return null;
+        }
+        return specSourceRepository.findById(id).orElse(null);
+    }
+
+    protected ProjectEntity mapProjectEntityFromId(Long id) {
+        if (id == null) {
+            return null;
+        }
+        return projectRepository.findById(id).orElse(null);
+    }
 
     // ===============================
     // UPDATE ENTITY FROM DOMAIN
     // ===============================
     // Polymorphic update - manual dispatching to concrete methods
-    default void updateEntityFromDomain(@MappingTarget EndpointEntity entity, Endpoint domain) {
+    public void updateEntityFromDomain(@MappingTarget EndpointEntity entity, Endpoint domain) {
         if (entity == null || domain == null) {
             return;
         }
@@ -114,12 +140,12 @@ public interface EndpointMapper {
     @Mapping(target = "specSource", ignore = true)  // Set by repository
     @Mapping(target = "project", ignore = true)     // Set by repository
     @Mapping(target = "testSuites", ignore = true)   // Managed by JPA
-    void updateEntityFromDomain(@MappingTarget RestEndpointEntity entity, RestEndpoint domain);
+    public abstract void updateEntityFromDomain(@MappingTarget RestEndpointEntity entity, RestEndpoint domain);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "specSource", ignore = true)  // Set by repository
     @Mapping(target = "project", ignore = true)     // Set by repository
     @Mapping(target = "testSuites", ignore = true)   // Managed by JPA
-    void updateEntityFromDomain(@MappingTarget SoapEndpointEntity entity, SoapEndpoint domain);
+    public abstract void updateEntityFromDomain(@MappingTarget SoapEndpointEntity entity, SoapEndpoint domain);
 }

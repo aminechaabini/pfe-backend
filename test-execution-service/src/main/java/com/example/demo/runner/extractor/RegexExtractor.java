@@ -27,12 +27,12 @@ public class RegexExtractor implements Extractor {
                 source = response.body();
             } else if ("HEADER".equals(spec.source())) {
                 // For headers, expression should be the header name
-                source = response.headers().firstValue(spec.expression()).orElse("");
+                source = response.headers().firstValue(spec.expr()).orElse("");
             } else {
                 return null;
             }
 
-            Pattern pattern = Pattern.compile(spec.expression());
+            Pattern pattern = Pattern.compile(spec.expr());
             Matcher matcher = pattern.matcher(source);
 
             if (matcher.find() && matcher.groupCount() > 0) {

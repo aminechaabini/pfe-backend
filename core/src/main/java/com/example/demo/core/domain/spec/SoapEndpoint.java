@@ -10,6 +10,35 @@ public class SoapEndpoint extends Endpoint {
     private SoapVersion version;   // 1.1 or 1.2
 
     /**
+     * Create new SoapEndpoint from parsed specification data.
+     */
+    public static SoapEndpoint create(
+            String serviceName,
+            String operationName,
+            String summary,
+            String specDetails,
+            SoapVersion version,
+            String soapAction,
+            Long specSourceId,
+            Long projectId) {
+
+        SoapEndpoint endpoint = new SoapEndpoint();
+        endpoint.serviceName = serviceName;
+        endpoint.operationName = operationName;
+        endpoint.name = operationName;
+        endpoint.summary = summary;
+        endpoint.operationId = serviceName + "." + operationName;
+        endpoint.specDetails = specDetails;
+        endpoint.version = version;
+        endpoint.soapAction = soapAction;
+        endpoint.specSourceId = specSourceId;
+        endpoint.projectId = projectId;
+        endpoint.createdAt = Instant.now();
+        endpoint.updatedAt = Instant.now();
+        return endpoint;
+    }
+
+    /**
      * Reconstitute SoapEndpoint from persistence (use in mappers only).
      */
     public static SoapEndpoint reconstitute(

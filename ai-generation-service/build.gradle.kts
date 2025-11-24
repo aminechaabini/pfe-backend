@@ -5,7 +5,7 @@ plugins {
 
 dependencies {
     // Inter-module dependencies
-    implementation(project(":shared-contracts"))
+    implementation(project(":common"))
 
     // Spring Boot Starters
     implementation("org.springframework.boot:spring-boot-starter-web")

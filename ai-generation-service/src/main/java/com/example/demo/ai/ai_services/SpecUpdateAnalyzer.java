@@ -1,9 +1,7 @@
 package com.example.demo.ai.ai_services;
 
-import com.example.demo.shared.context.dto.analysis.RestSpecUpdateAnalysis;
-import com.example.demo.shared.context.dto.analysis.SoapSpecUpdateAnalysis;
-import com.example.demo.shared.context.RestSpecUpdateAnalysisContext;
-import com.example.demo.shared.context.SoapSpecUpdateAnalysisContext;
+import com.example.demo.common.context.dto.analysis.RestSpecUpdateAnalysis;
+import com.example.demo.common.context.dto.analysis.SoapSpecUpdateAnalysis;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
@@ -29,17 +27,21 @@ public interface SpecUpdateAnalyzer {
           Analyze changes between OpenAPI specifications:
 
           OLD SPEC:
-          {{context.oldSpecContent}}
+          {{oldSpecContent}}
 
           NEW SPEC:
-          {{context.newSpecContent}}
+          {{newSpecContent}}
 
-          EXISTING TESTS:
-          {{context.existingTests}}
+          EXISTING TESTS (JSON):
+          {{existingTests}}
 
           Compare the specs and analyze impact on existing tests.
           """)
-    RestSpecUpdateAnalysis analyzeRestSpecUpdate(@V("context") RestSpecUpdateAnalysisContext context);
+    RestSpecUpdateAnalysis analyzeRestSpecUpdate(
+            @V("oldSpecContent") String oldSpecContent,
+            @V("newSpecContent") String newSpecContent,
+            @V("existingTests") String existingTests
+    );
 
     @SystemMessage("""
           You are a SOAP API change analysis expert. Compare old and new WSDL specifications
@@ -60,15 +62,19 @@ public interface SpecUpdateAnalyzer {
           Analyze changes between WSDL specifications:
 
           OLD SPEC:
-          {{context.oldSpecContent}}
+          {{oldSpecContent}}
 
           NEW SPEC:
-          {{context.newSpecContent}}
+          {{newSpecContent}}
 
-          EXISTING TESTS:
-          {{context.existingTests}}
+          EXISTING TESTS (JSON):
+          {{existingTests}}
 
           Compare the specs and analyze impact on existing tests.
           """)
-    SoapSpecUpdateAnalysis analyzeSoapSpecUpdate(@V("context") SoapSpecUpdateAnalysisContext context);
+    SoapSpecUpdateAnalysis analyzeSoapSpecUpdate(
+            @V("oldSpecContent") String oldSpecContent,
+            @V("newSpecContent") String newSpecContent,
+            @V("existingTests") String existingTests
+    );
 }

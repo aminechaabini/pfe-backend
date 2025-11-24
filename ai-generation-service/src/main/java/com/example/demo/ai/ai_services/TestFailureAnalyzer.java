@@ -1,9 +1,6 @@
 package com.example.demo.ai.ai_services;
 
-import com.example.demo.shared.context.dto.analysis.FailureAnalysis;
-import com.example.demo.shared.context.RestFailureAnalysisContext;
-import com.example.demo.shared.context.SoapFailureAnalysisContext;
-import com.example.demo.shared.context.E2eFailureAnalysisContext;
+import com.example.demo.common.context.dto.analysis.FailureAnalysis;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
@@ -21,25 +18,35 @@ public interface TestFailureAnalyzer {
     @UserMessage("""
           REST test failed with the following details:
 
-          Test Name: {{context.testName}}
-          Endpoint: {{context.method}} {{context.url}}
+          Test Name: {{testName}}
+          Endpoint: {{method}} {{url}}
 
           Request Body:
-          {{context.requestBody}}
+          {{requestBody}}
 
-          Expected Status: {{context.expectedStatus}}
-          Actual Status: {{context.actualStatus}}
+          Expected Status: {{expectedStatus}}
+          Actual Status: {{actualStatus}}
 
           Actual Response Body:
-          {{context.actualBody}}
+          {{actualBody}}
 
-          Failed Assertion: {{context.failedAssertion}}
+          Failed Assertion: {{failedAssertion}}
 
-          Was passing before: {{context.wasPassingBefore}}
+          Was passing before: {{wasPassingBefore}}
 
           Explain why this test failed and how to fix it.
           """)
-    FailureAnalysis analyzeRestFailure(@V("context") RestFailureAnalysisContext context);
+    FailureAnalysis analyzeRestFailure(
+            @V("testName") String testName,
+            @V("method") String method,
+            @V("url") String url,
+            @V("requestBody") String requestBody,
+            @V("expectedStatus") String expectedStatus,
+            @V("actualStatus") String actualStatus,
+            @V("actualBody") String actualBody,
+            @V("failedAssertion") String failedAssertion,
+            @V("wasPassingBefore") String wasPassingBefore
+    );
 
     @SystemMessage("""
           You are a SOAP API test debugging expert. Analyze test failures and provide:
@@ -53,26 +60,36 @@ public interface TestFailureAnalyzer {
     @UserMessage("""
           SOAP test failed with the following details:
 
-          Test Name: {{context.testName}}
-          Endpoint: {{context.url}}
-          SOAPAction: {{context.soapAction}}
+          Test Name: {{testName}}
+          Endpoint: {{url}}
+          SOAPAction: {{soapAction}}
 
           SOAP Request Envelope:
-          {{context.soapEnvelope}}
+          {{soapEnvelope}}
 
-          Expected Status: {{context.expectedStatus}}
-          Actual Status: {{context.actualStatus}}
+          Expected Status: {{expectedStatus}}
+          Actual Status: {{actualStatus}}
 
           Actual Response:
-          {{context.actualBody}}
+          {{actualBody}}
 
-          Failed Assertion: {{context.failedAssertion}}
+          Failed Assertion: {{failedAssertion}}
 
-          Was passing before: {{context.wasPassingBefore}}
+          Was passing before: {{wasPassingBefore}}
 
           Explain why this test failed and how to fix it.
           """)
-    FailureAnalysis analyzeSoapFailure(@V("context") SoapFailureAnalysisContext context);
+    FailureAnalysis analyzeSoapFailure(
+            @V("testName") String testName,
+            @V("url") String url,
+            @V("soapEnvelope") String soapEnvelope,
+            @V("soapAction") String soapAction,
+            @V("expectedStatus") String expectedStatus,
+            @V("actualStatus") String actualStatus,
+            @V("actualBody") String actualBody,
+            @V("failedAssertion") String failedAssertion,
+            @V("wasPassingBefore") String wasPassingBefore
+    );
 
     @SystemMessage("""
           You are an E2E workflow test debugging expert. Analyze test failures and provide:
@@ -85,28 +102,42 @@ public interface TestFailureAnalyzer {
     @UserMessage("""
           E2E test failed with the following details:
 
-          Test Name: {{context.testName}}
-          Failed at Step: {{context.failedStepIndex}} - {{context.failedStepName}}
-          Step Type: {{context.stepType}}
-          Endpoint: {{context.method}} {{context.url}}
+          Test Name: {{testName}}
+          Failed at Step: {{failedStepIndex}} - {{failedStepName}}
+          Step Type: {{stepType}}
+          Endpoint: {{method}} {{url}}
 
           Request:
-          {{context.request}}
+          {{request}}
 
-          Expected Status: {{context.expectedStatus}}
-          Actual Status: {{context.actualStatus}}
+          Expected Status: {{expectedStatus}}
+          Actual Status: {{actualStatus}}
 
           Actual Response:
-          {{context.actualBody}}
+          {{actualBody}}
 
-          Failed Assertion: {{context.failedAssertion}}
+          Failed Assertion: {{failedAssertion}}
 
           Variables extracted from previous steps:
-          {{context.extractedVariables}}
+          {{extractedVariables}}
 
-          Was passing before: {{context.wasPassingBefore}}
+          Was passing before: {{wasPassingBefore}}
 
           Explain why this test failed and how to fix it.
           """)
-    FailureAnalysis analyzeE2eFailure(@V("context") E2eFailureAnalysisContext context);
+    FailureAnalysis analyzeE2eFailure(
+            @V("testName") String testName,
+            @V("failedStepIndex") String failedStepIndex,
+            @V("failedStepName") String failedStepName,
+            @V("stepType") String stepType,
+            @V("method") String method,
+            @V("url") String url,
+            @V("request") String request,
+            @V("expectedStatus") String expectedStatus,
+            @V("actualStatus") String actualStatus,
+            @V("actualBody") String actualBody,
+            @V("failedAssertion") String failedAssertion,
+            @V("extractedVariables") String extractedVariables,
+            @V("wasPassingBefore") String wasPassingBefore
+    );
 }

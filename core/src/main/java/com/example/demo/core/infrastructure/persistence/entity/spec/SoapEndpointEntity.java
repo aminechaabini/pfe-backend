@@ -22,10 +22,10 @@ import java.util.Set;
 @DiscriminatorValue("SOAP")
 public class SoapEndpointEntity extends EndpointEntity {
 
-    @Column(name = "service_name", nullable = false, length = 200)
+    @Column(name = "service_name", length = 200)
     private String serviceName;
 
-    @Column(name = "operation_name", nullable = false, length = 200)
+    @Column(name = "operation_name", length = 200)
     private String operationName;
 
     @Column(name = "soap_action", length = 500)
@@ -36,6 +36,10 @@ public class SoapEndpointEntity extends EndpointEntity {
     private SoapVersion version;
 
     // Constructors
+
+    public SoapEndpointEntity() {
+        super();
+    }
 
     public SoapEndpointEntity(String summary, String operationId, String specDetails, SpecSourceEntity specSource, ProjectEntity project, Set<TestSuiteEntity> testSuites, String serviceName, String operationName, String soapAction, SoapVersion version) {
         super(summary, operationId, specDetails, specSource, project, testSuites);

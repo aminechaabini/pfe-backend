@@ -34,7 +34,8 @@ public class SpecSource {
     private String fileName;       // Original file: "orders-v1.yaml"
     private SpecType specType;     // OPENAPI_3_0, SWAGGER_2_0, WSDL_1_1
     private String content;        // Full spec content (immutable)
-    private String version;        // Spec version: "3.0.0"
+    private String version;
+    private Long projectId;// Spec version: "3.0.0"
 
     // Owned entities
     private final List<Endpoint> endpoints = new ArrayList<>();
@@ -44,12 +45,13 @@ public class SpecSource {
     private Instant updatedAt;
 
     // Private constructor - use factory method
-    private SpecSource(String name, String fileName, SpecType specType, String content) {
+    private SpecSource(String name, String fileName, SpecType specType, String content, Long projectId) {
         validateName(name);
         validateFileName(fileName);
         Objects.requireNonNull(specType, "Spec type cannot be null");
         validateContent(content);
 
+        this.projectId = projectId;
         this.name = name.trim();
         this.fileName = fileName.trim();
         this.specType = specType;
@@ -70,8 +72,8 @@ public class SpecSource {
      * @return new SpecSource instance
      * @throws IllegalArgumentException if validation fails
      */
-    public static SpecSource create(String name, String fileName, SpecType specType, String content) {
-        return new SpecSource(name, fileName, specType, content);
+    public static SpecSource create(String name, String fileName, SpecType specType, String content, Long projectId) {
+        return new SpecSource(name, fileName, specType, content, projectId);
     }
 
     /**
@@ -85,22 +87,24 @@ public class SpecSource {
             SpecType specType,
             String content,
             String version,
+            Long projectId,
             Instant createdAt,
             Instant updatedAt) {
 
-        SpecSource spec = new SpecSource(name, fileName, specType, content, createdAt, updatedAt);
+        SpecSource spec = new SpecSource(name, fileName, specType, content, projectId, createdAt, updatedAt);
         spec.id = id;
         spec.version = version;
         return spec;
     }
 
     // Private constructor for reconstitution
-    private SpecSource(String name, String fileName, SpecType specType, String content,
+    private SpecSource(String name, String fileName, SpecType specType, String content, Long projectId,
                        Instant createdAt, Instant updatedAt) {
         this.name = name;
         this.fileName = fileName;
         this.specType = specType;
         this.content = content;
+        this.projectId = projectId;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -309,6 +313,10 @@ public class SpecSource {
             throw new IllegalArgumentException("Spec content cannot be null or blank");
         }
         // Content is stored as-is, no max length (database will use TEXT type)
+    }
+
+    public Long getProjectId() {
+        return projectId;
     }
 
     /**

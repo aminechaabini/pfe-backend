@@ -299,20 +299,20 @@ public class Project {
         }
     }
 
-    public void addEnpoint (Endpoint endpoint){
+    public void addEndpoint (Endpoint endpoint){
         //Enforce uniqueness constraint: no other endpoint in this project can have this name
         Optional<Endpoint> conflicting = endpoints.stream()
                 .filter(s -> s.getName().equalsIgnoreCase(endpoint.getName()))
                 .findFirst();
 
-        //enfore that the endpoint specsource exist in the project
+        //enforce that the endpoint's specsource exists in the project
         Optional<SpecSource> specSource = specSources.stream()
-                .filter(s -> s.getId().equals(endpoint.getId()))
+                .filter(s -> s.getId().equals(endpoint.getSpecSourceId()))
                 .findFirst();
 
         if (specSource.isEmpty()) {
             throw new IllegalArgumentException(
-                "Spec source with id '" + endpoint.getId() + "' does not exist in project"
+                "Spec source with id '" + endpoint.getSpecSourceId() + "' does not exist in project"
             );
         }
 

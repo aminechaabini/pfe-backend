@@ -1,6 +1,10 @@
 package com.example.demo.core.infrastructure.spec;
 
-import com.example.demo.core.app.service.spec.*;
+import com.example.demo.core.application.parser.SpecParser;
+import com.example.demo.core.application.parser.SpecParseException;
+import com.example.demo.core.application.parser.dto.ParsedEndpoint;
+import com.example.demo.core.application.parser.dto.ParsedSoapEndpoint;
+import com.example.demo.core.application.parser.dto.ParsedSpec;
 import com.example.demo.core.domain.spec.SpecType;
 import org.springframework.stereotype.Component;
 import org.xml.sax.InputSource;
@@ -23,8 +27,10 @@ import java.util.Map;
 public class SoapSpecParser implements SpecParser {
 
     @Override
-    public ParsedSpec parse(String content, SpecType specType) {
-        validateSpecType(specType);
+    public ParsedSpec parse(String content) {
+        if (content == null || content.isBlank()) {
+            throw new IllegalArgumentException("content cannot be null or blank");
+        }
 
         try {
             WSDLFactory factory = WSDLFactory.newInstance();
@@ -44,12 +50,9 @@ public class SoapSpecParser implements SpecParser {
         }
     }
 
-    private void validateSpecType(SpecType specType) {
-        if (!specType.isSoap()) {
-            throw new IllegalArgumentException(
-                "SoapSpecParser only handles SOAP-based specs (WSDL), got: " + specType
-            );
-        }
+    @Override
+    public boolean supports(SpecType specType) {
+        return specType != null && specType.isSoap();
     }
 
     private String detectWsdlVersion(Definition definition) {
@@ -86,7 +89,7 @@ public class SoapSpecParser implements SpecParser {
 
     @SuppressWarnings("unchecked")
     private void extractOperationsFromService(Service service, String serviceName,
-                                               List<ParsedEndpoint> endpoints) {
+                                              List<ParsedEndpoint> endpoints) {
         if (service.getPorts() == null) {
             return;
         }
@@ -103,7 +106,7 @@ public class SoapSpecParser implements SpecParser {
 
     @SuppressWarnings("unchecked")
     private void extractOperationsFromBinding(Binding binding, String serviceName,
-                                               List<ParsedEndpoint> endpoints) {
+                                              List<ParsedEndpoint> endpoints) {
         if (binding.getBindingOperations() == null) {
             return;
         }
@@ -115,15 +118,14 @@ public class SoapSpecParser implements SpecParser {
             Operation operation = bindingOp.getOperation();
 
             String summary = extractDocumentation(operation);
+            String operationDetails = buildOperationDetails(operation);
 
             ParsedSoapEndpoint endpoint = new ParsedSoapEndpoint(
                 serviceName,
                 operationName,
-                summary
+                summary,
+                operationDetails
             );
-
-            // Store operation details (input/output messages, etc.)
-            endpoint.setDetailsAsJson(buildOperationDetails(operation));
 
             endpoints.add(endpoint);
         });

@@ -7,7 +7,11 @@
       "Bash(robocopy:*)",
       "Bash(powershell -Command:*)",
       "Bash(powershell -ExecutionPolicy Bypass -File \"C:\\Users\\a50048601\\pfe\\demo\\fix-shared-context.ps1\")",
-      "Bash(./gradlew :core:compileJava:*)"
+      "Bash(./gradlew :core:compileJava:*)",
+      "Bash(./gradlew:*)",
+      "Bash(nul)",
+      "Bash(dir:*)",
+      "Bash(powershell -ExecutionPolicy Bypass -Command:*)"
     ],
     "deny": [],
     "ask": []

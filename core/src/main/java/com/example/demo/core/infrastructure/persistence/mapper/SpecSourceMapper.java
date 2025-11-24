@@ -1,8 +1,11 @@
 package com.example.demo.core.infrastructure.persistence.mapper;
 
 import com.example.demo.core.domain.spec.SpecSource;
+import com.example.demo.core.infrastructure.persistence.entity.project.ProjectEntity;
 import com.example.demo.core.infrastructure.persistence.entity.spec.SpecSourceEntity;
+import com.example.demo.core.infrastructure.persistence.jpa.ProjectRepository;
 import org.mapstruct.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * MapStruct mapper for SpecSource ↔ SpecSourceEntity.
@@ -11,13 +14,16 @@ import org.mapstruct.*;
  * Endpoints collection is managed separately.
  */
 @Mapper(componentModel = "spring", uses = {EndpointMapper.class})
-public interface SpecSourceMapper {
+public abstract class SpecSourceMapper {
+
+    @Autowired
+    ProjectRepository projectRepository;
 
     /**
      * Convert entity to domain using reconstitution.
      * Preserves full entity state including identity and timestamps.
      */
-    default SpecSource toDomain(SpecSourceEntity entity) {
+    public SpecSource toDomain(SpecSourceEntity entity) {
         if (entity == null) {
             return null;
         }
@@ -28,7 +34,7 @@ public interface SpecSourceMapper {
             entity.getFileName(),
             entity.getSpecType(),
             entity.getContent(),
-            entity.getVersion(),
+            entity.getVersion(), entity.getProject() != null ? entity.getProject().getId() : null,
             entity.getCreatedAt(),
             entity.getUpdatedAt()
         );
@@ -38,9 +44,16 @@ public interface SpecSourceMapper {
      * Convert domain to entity.
      */
     @Mapping(target = "specType", source = "specType")
+    @Mapping(target = "project", expression = "java(mapProjectEntityFromId(domain.getProjectId()))")
     @Mapping(target = "endpoints", ignore = true)
-    @Mapping(target = "project", ignore = true)
-    SpecSourceEntity toEntity(SpecSource domain);
+    public abstract SpecSourceEntity toEntity(SpecSource domain);
+
+    ProjectEntity mapProjectEntityFromId(Long id) {
+        if (id == null) {
+            return null;
+        }
+        return projectRepository.findById(id).orElse(null);
+    }
 
     /**
      * Update existing entity from domain.
@@ -50,5 +63,5 @@ public interface SpecSourceMapper {
     @Mapping(target = "content", ignore = true) // Immutable
     @Mapping(target = "endpoints", ignore = true)
     @Mapping(target = "project", ignore = true)
-    void updateEntityFromDomain(@MappingTarget SpecSourceEntity entity, SpecSource domain);
+    public abstract void updateEntityFromDomain(@MappingTarget SpecSourceEntity entity, SpecSource domain);
 }

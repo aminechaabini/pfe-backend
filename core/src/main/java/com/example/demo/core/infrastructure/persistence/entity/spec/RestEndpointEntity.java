@@ -21,13 +21,17 @@ import java.util.Set;
 public class RestEndpointEntity extends EndpointEntity {
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 10)
+    @Column(length = 10)
     private HttpMethod method;
 
-    @Column(nullable = false, length = 500)
+    @Column(length = 500)
     private String path;
 
     // Constructors
+
+    public RestEndpointEntity() {
+        super();
+    }
 
     public RestEndpointEntity(String summary, String operationId, String specDetails, SpecSourceEntity specSource, ProjectEntity project, Set<TestSuiteEntity> testSuites, HttpMethod method, String path) {
         super(summary, operationId, specDetails, specSource, project, testSuites);

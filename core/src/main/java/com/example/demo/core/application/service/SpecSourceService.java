@@ -1,12 +1,15 @@
 package com.example.demo.core.application.service;
 
 import com.example.demo.core.application.dto.spec.UploadSpecRequest;
+import com.example.demo.core.application.parser.SpecParser;
+import com.example.demo.core.application.parser.dto.ParsedEndpoint;
+import com.example.demo.core.application.parser.dto.ParsedRestEndpoint;
+import com.example.demo.core.application.parser.dto.ParsedSoapEndpoint;
+import com.example.demo.core.application.parser.dto.ParsedSpec;
 import com.example.demo.core.domain.project.Project;
 import com.example.demo.core.domain.project.ProjectRepository;
-import com.example.demo.core.domain.spec.Endpoint;
-import com.example.demo.core.domain.spec.EndpointRepository;
-import com.example.demo.core.domain.spec.SpecSource;
-import com.example.demo.core.domain.spec.SpecSourceRepository;
+import com.example.demo.core.domain.spec.*;
+import com.example.demo.core.infrastructure.spec.SpecParserFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,16 +32,17 @@ public class SpecSourceService {
     private final SpecSourceRepository specSourceRepository;
     private final EndpointRepository endpointRepository;
     private final ProjectRepository projectRepository;
-    // TODO: Inject SpecParser once it's properly implemented
-    // private final SpecParser specParser;
+    private final SpecParserFactory specParserFactory;
 
     public SpecSourceService(
             SpecSourceRepository specSourceRepository,
             EndpointRepository endpointRepository,
-            ProjectRepository projectRepository) {
+            ProjectRepository projectRepository,
+            SpecParserFactory specParserFactory) {
         this.specSourceRepository = specSourceRepository;
         this.endpointRepository = endpointRepository;
         this.projectRepository = projectRepository;
+        this.specParserFactory = specParserFactory;
     }
 
     /**
@@ -65,7 +69,8 @@ public class SpecSourceService {
                 request.name(),
                 request.fileName(),
                 request.specType(),
-                request.content()
+                request.content(),
+                request.projectId()
         );
 
         // Save spec source
@@ -75,16 +80,26 @@ public class SpecSourceService {
         project.addSpecSource(specSource);
         projectRepository.save(project);
 
-        // TODO: Parse spec and extract endpoints
-        // ParsedSpec parsed = specParser.parse(request.content());
-        // specSource.setVersion(parsed.getVersion());
-        // for (ParsedEndpoint parsedEndpoint : parsed.getEndpoints()) {
-        //     Endpoint endpoint = convertToEndpoint(parsedEndpoint, specSource);
-        //     specSource.addEndpoint(endpoint);
-        //     project.addEndpoint(endpoint);
-        // }
-        // specSourceRepository.save(specSource);
-        // projectRepository.save(project);
+        // Parse spec and extract endpoints
+        SpecParser parser = specParserFactory.getParser(request.specType());
+        ParsedSpec parsed = parser.parse(request.content());
+
+        // Set version from parsed spec
+        if (parsed.version() != null) {
+            specSource.setVersion(parsed.version());
+        }
+
+        // Convert and save endpoints
+        for (ParsedEndpoint parsedEndpoint : parsed.endpoints()) {
+            Endpoint endpoint = convertToEndpoint(parsedEndpoint, specSource, project);
+            specSource.addEndpoint(endpoint);
+            project.addEndpoint(endpoint);
+            endpointRepository.save(endpoint);
+        }
+
+        // Save updated entities
+        specSourceRepository.save(specSource);
+        projectRepository.save(project);
 
         return specSource;
     }
@@ -161,5 +176,55 @@ public class SpecSourceService {
     @Transactional(readOnly = true)
     public List<Endpoint> getProjectEndpoints(Long projectId) {
         return endpointRepository.findByProjectId(projectId);
+    }
+
+    /**
+     * Convert a parsed endpoint DTO to domain Endpoint entity.
+     */
+    private Endpoint convertToEndpoint(ParsedEndpoint parsedEndpoint, SpecSource specSource, Project project) {
+        if (parsedEndpoint instanceof ParsedRestEndpoint restEndpoint) {
+            return convertRestEndpoint(restEndpoint, specSource, project);
+        } else if (parsedEndpoint instanceof ParsedSoapEndpoint soapEndpoint) {
+            return convertSoapEndpoint(soapEndpoint, specSource, project);
+        } else {
+            throw new IllegalArgumentException("Unknown endpoint type: " + parsedEndpoint.getClass());
+        }
+    }
+
+    private RestEndpoint convertRestEndpoint(ParsedRestEndpoint parsed, SpecSource specSource, Project project) {
+        HttpMethod method = HttpMethod.valueOf(parsed.httpMethod());
+        return RestEndpoint.create(
+                method,
+                parsed.path(),
+                parsed.name(),
+                parsed.summary(),
+                parsed.operationId(),
+                parsed.specDetails(),
+                specSource.getId(),
+                project.getId()
+        );
+    }
+
+    private SoapEndpoint convertSoapEndpoint(ParsedSoapEndpoint parsed, SpecSource specSource, Project project) {
+        // Determine SOAP version from spec source version
+        SoapVersion soapVersion = determineSoapVersion(specSource.getVersion());
+
+        return SoapEndpoint.create(
+                parsed.serviceName(),
+                parsed.operationName(),
+                parsed.summary(),
+                parsed.specDetails(),
+                soapVersion,
+                null, // soapAction - could be extracted from specDetails if needed
+                specSource.getId(),
+                project.getId()
+        );
+    }
+
+    private SoapVersion determineSoapVersion(String wsdlVersion) {
+        if (wsdlVersion != null && wsdlVersion.startsWith("2.")) {
+            return SoapVersion.SOAP_1_2;
+        }
+        return SoapVersion.SOAP_1_1; // default
     }
 }

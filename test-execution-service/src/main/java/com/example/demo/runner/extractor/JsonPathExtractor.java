@@ -24,7 +24,7 @@ public class JsonPathExtractor implements Extractor {
                 return null;
             }
 
-            Object value = JsonPath.read(response.body(), spec.expression());
+            Object value = JsonPath.read(response.body(), spec.expr());
             return String.valueOf(value);
 
         } catch (Exception e) {
