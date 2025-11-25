@@ -37,18 +37,19 @@ public class TestExecutionService {
     private final TestSuiteRunRepository testSuiteRunRepository;
     private final TestCaseRunRepository testCaseRunRepository;
     private final ProjectRepository projectRepository;
-    // TODO: Inject TestRunner once infrastructure is implemented
-    // private final TestRunner testRunner;
+    private final com.example.demo.core.application.ports.TestExecutionPort testExecutionPort;
 
     public TestExecutionService(
             TestSuiteRepository testSuiteRepository,
             TestSuiteRunRepository testSuiteRunRepository,
             TestCaseRunRepository testCaseRunRepository,
-            ProjectRepository projectRepository) {
+            ProjectRepository projectRepository,
+            com.example.demo.core.application.ports.TestExecutionPort testExecutionPort) {
         this.testSuiteRepository = testSuiteRepository;
         this.testSuiteRunRepository = testSuiteRunRepository;
         this.testCaseRunRepository = testCaseRunRepository;
         this.projectRepository = projectRepository;
+        this.testExecutionPort = testExecutionPort;
     }
 
     /**
@@ -86,17 +87,17 @@ public class TestExecutionService {
         // Save run to get ID
         suiteRun = testSuiteRunRepository.save(suiteRun);
 
-        // TODO: Execute tests asynchronously using TestRunner
-        // Long finalSuiteRunId = suiteRun.getId();
-        // executorService.submit(() -> {
-        //     for (TestCase testCase : testSuite.getTestCases()) {
-        //         TestCaseRun caseRun = testRunner.execute(testCase, resolvedVariables);
-        //         caseRun = testCaseRunRepository.save(caseRun);
-        //         suiteRun.addTestCaseRun(caseRun);
-        //     }
-        //     suiteRun.complete();
-        //     testSuiteRunRepository.save(suiteRun);
-        // });
+        // Execute tests asynchronously using TestExecutionPort
+        Long finalSuiteRunId = suiteRun.getId();
+        // TODO: Use ExecutorService for true async execution
+        // For now, execute synchronously
+        TestSuiteRun executedSuiteRun = testExecutionPort.executeTestSuite(testSuite, resolvedVariables);
+
+        // Save updated run results
+        for (TestCaseRun caseRun : executedSuiteRun.getTestCaseRuns()) {
+            testCaseRunRepository.save(caseRun);
+        }
+        testSuiteRunRepository.save(executedSuiteRun);
 
         return suiteRun.getId();
     }
@@ -130,13 +131,10 @@ public class TestExecutionService {
                 request.environmentVariables()
         );
 
-        // TODO: Execute test using TestRunner
-        // TestCaseRun caseRun = testRunner.execute(testCase, resolvedVariables);
-        // caseRun = testCaseRunRepository.save(caseRun);
-        // return caseRun.getId();
-
-        // Placeholder until TestRunner is implemented
-        throw new UnsupportedOperationException("Test execution not yet implemented");
+        // Execute test using TestExecutionPort
+        TestCaseRun caseRun = testExecutionPort.executeTestCase(testCase, resolvedVariables);
+        caseRun = testCaseRunRepository.save(caseRun);
+        return caseRun.getId();
     }
 
     /**

@@ -28,10 +28,20 @@ public class StatusAssertionValidator implements Validator {
                 ? "Status matches: " + actualStatus
                 : "Expected status " + expectedStatus + " but got " + actualStatus;
 
-            return new AssertionResult(assertion, passed, message);
+            return new AssertionResult(
+                assertion.type(),
+                passed,
+                message,
+                String.valueOf(expectedStatus),
+                String.valueOf(actualStatus)
+            );
 
         } catch (NumberFormatException e) {
-            return new AssertionResult(assertion, false, "Invalid expected status: " + assertion.expected());
+            return new AssertionResult(
+                assertion.type(),
+                false,
+                "Invalid expected status: " + assertion.expected()
+            );
         }
     }
 }

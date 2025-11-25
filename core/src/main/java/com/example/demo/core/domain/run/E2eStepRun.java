@@ -2,10 +2,7 @@ package com.example.demo.core.domain.run;
 
 import com.example.demo.core.domain.test.e2e.E2eStep;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Represents the execution of a single E2E step.
@@ -15,6 +12,7 @@ public class E2eStepRun extends Run {
 
     private E2eStep e2eStep;
     private final List<AssertionResult> assertionResults = new ArrayList<>();
+    private Map<String, String> extractedVariables = new HashMap<>();
 
     public E2eStepRun() {
         super();
@@ -73,5 +71,28 @@ public class E2eStepRun extends Run {
      */
     public long getFailedAssertionsCount() {
         return assertionResults.stream().filter(result -> !result.ok()).count();
+    }
+
+    /**
+     * Get extracted variables from this step (unmodifiable view).
+     */
+    public Map<String, String> getExtractedVariables() {
+        return Collections.unmodifiableMap(extractedVariables);
+    }
+
+    /**
+     * Set extracted variables for this step.
+     */
+    public void setExtractedVariables(Map<String, String> variables) {
+        this.extractedVariables = new HashMap<>(Objects.requireNonNull(variables, "Variables cannot be null"));
+    }
+
+    /**
+     * Add a single extracted variable.
+     */
+    public void addExtractedVariable(String name, String value) {
+        Objects.requireNonNull(name, "Variable name cannot be null");
+        Objects.requireNonNull(value, "Variable value cannot be null");
+        this.extractedVariables.put(name, value);
     }
 }

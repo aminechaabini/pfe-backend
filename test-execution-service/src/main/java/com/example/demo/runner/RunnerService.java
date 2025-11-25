@@ -1,17 +1,25 @@
 package com.example.demo.runner;
 
-import com.example.demo.shared.request.*;
-import com.example.demo.shared.result.*;
+import com.example.demo.common.ports.TestExecutionPort;
+import com.example.demo.shared.request.E2eRunRequest;
+import com.example.demo.shared.request.RestRunRequest;
+import com.example.demo.shared.request.RunRequest;
+import com.example.demo.shared.request.SoapRunRequest;
+import com.example.demo.shared.result.RunResult;
+import com.example.demo.shared.result.RunResultCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Simple queue-based runner that processes test requests sequentially.
  * Uses a blocking queue and dedicated worker thread for FIFO execution.
+ *
+ * <p>This is the primary implementation of the TestExecutionPort interface.
  */
-public class RunnerService {
+public class RunnerService implements TestExecutionPort {
 
     private static final Logger log = LoggerFactory.getLogger(RunnerService.class);
 
@@ -39,6 +47,7 @@ public class RunnerService {
      * @param request the run request (REST, SOAP, or E2E)
      * @param callback invoked when execution completes
      */
+    @Override
     public void submit(RunRequest request, RunResultCallback callback) {
         queue.offer(new QueuedRun(request, callback));
         log.info("Queued run: {} (queue size: {})", request.runId(), queue.size());
@@ -49,6 +58,7 @@ public class RunnerService {
      *
      * @return number of pending runs
      */
+    @Override
     public int getQueueSize() {
         return queue.size();
     }
@@ -95,6 +105,7 @@ public class RunnerService {
      * Shutdown the runner service.
      * Waits for current run to complete but clears pending queue.
      */
+    @Override
     public void shutdown() {
         log.info("Shutting down RunnerService");
         workerThread.interrupt();

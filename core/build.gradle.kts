@@ -36,6 +36,9 @@ dependencies {
 
     // AI Generation Service - for test generation
     implementation(project(":ai-generation-service"))
+
+    // Test Execution Service - for executing tests
+    implementation(project(":test-execution-service"))
 }
 
 sourceSets {

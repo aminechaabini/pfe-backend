@@ -1,12 +1,10 @@
 package com.example;
 
-import com.example.demo.runner.*;
-import com.example.demo.runner.builder.*;
-import com.example.demo.runner.executor.*;
-import com.example.demo.runner.extractor.*;
-import com.example.demo.runner.validator.*;
+import com.example.demo.common.ports.TestExecutionPort;
 import com.example.demo.shared.request.*;
-import com.example.demo.shared.result.*;
+import com.example.demo.shared.result.ApiRunResult;
+import com.example.demo.shared.result.E2eRunResult;
+import com.example.demo.shared.result.StepResult;
 import com.example.demo.shared.valueobject.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -36,44 +34,20 @@ public class TestExecutionRunnerApplication {
     }
 
     @Bean
-    public CommandLineRunner demo() {
+    public CommandLineRunner demo(TestExecutionPort testExecutionPort) {
         return args -> {
             System.out.println("\n=== Test Execution Service Demo ===\n");
 
             try {
-                // Setup test execution infrastructure
-                Map<String, HttpRequestBuilder> builders = Map.of(
-                    "REST", new RestRequestBuilder(),
-                    "SOAP", new SoapRequestBuilder()
-                );
-
-                HttpRequestExecutor executor = new DefaultHttpRequestExecutor();
-
-                AssertionValidator assertionValidator = new CompositeAssertionValidator(
-                    new StatusAssertionValidator(),
-                    new JsonPathAssertionValidator(),
-                    new XPathAssertionValidator()
-                );
-
-                VariableExtractor variableExtractor = new CompositeVariableExtractor(
-                    new JsonPathExtractor(),
-                    new XPathExtractor(),
-                    new RegexExtractor()
-                );
-
-                ApiTestRunner apiRunner = new ApiTestRunner(builders, executor, assertionValidator);
-                E2eTestRunner e2eRunner = new E2eTestRunner(builders, executor, assertionValidator, variableExtractor);
-                RunnerService runnerService = new RunnerService(apiRunner, e2eRunner);
-
-                // Run demos
-                testRestApiExecution(runnerService);
-                testSoapApiExecution(runnerService);
-                testE2eWorkflowExecution(runnerService);
+                // Run demos using the injected port
+                testRestApiExecution(testExecutionPort);
+                testSoapApiExecution(testExecutionPort);
+                testE2eWorkflowExecution(testExecutionPort);
 
                 System.out.println("=== Demo completed successfully! ===\n");
 
                 // Shutdown
-                runnerService.shutdown();
+                testExecutionPort.shutdown();
 
             } catch (Exception e) {
                 System.err.println("Error during test execution: " + e.getMessage());
@@ -85,13 +59,14 @@ public class TestExecutionRunnerApplication {
     /**
      * Test REST API execution with JSONPath assertions.
      */
-    private void testRestApiExecution(RunnerService runnerService) throws Exception {
-        System.out.println("=== Testing REST API Execution ===\n");
+    private void testRestApiExecution(TestExecutionPort testExecutionPort) throws Exception {
+        System.out.println("=== Testing REST API Execution with Variables ===\n");
+        System.out.println("Using variable: baseUrl = https://jsonplaceholder.typicode.com\n");
 
-        // Create a REST test for JSONPlaceholder API
+        // Create a REST test using ${baseUrl} variable
         HttpRequestData request = new HttpRequestData(
             "GET",
-            "https://jsonplaceholder.typicode.com/users/1",
+            "${baseUrl}/users/1",
             Map.of("Accept", "application/json"),
             (byte[]) null
         );
@@ -102,20 +77,22 @@ public class TestExecutionRunnerApplication {
             new AssertionSpec("jsonPathEquals", "$.username", "Bret")
         );
 
+        // Pass baseUrl as a variable
         RestRunRequest runRequest = new RestRunRequest(
             "rest-test-1",
             request,
             assertions,
-            Map.of()
+            Map.of("baseUrl", "https://jsonplaceholder.typicode.com")
         );
 
         CountDownLatch latch = new CountDownLatch(1);
 
-        runnerService.submit(runRequest, result -> {
+        testExecutionPort.submit(runRequest, result -> {
             System.out.println("✓ REST Test Completed:");
             System.out.println("  Run ID: " + result.runId());
             System.out.println("  Status: " + result.status());
             System.out.println("  Duration: " + result.duration() + "ms");
+            System.out.println("  Resolved URL: " + request.url().replace("${baseUrl}", "https://jsonplaceholder.typicode.com"));
 
             if (result instanceof ApiRunResult apiResult) {
                 System.out.println("  Response Status: " + apiResult.response().statusCode());
@@ -135,8 +112,9 @@ public class TestExecutionRunnerApplication {
     /**
      * Test SOAP API execution with XPath assertions.
      */
-    private void testSoapApiExecution(RunnerService runnerService) throws Exception {
-        System.out.println("=== Testing SOAP API Execution ===\n");
+    private void testSoapApiExecution(TestExecutionPort testExecutionPort) throws Exception {
+        System.out.println("=== Testing SOAP API Execution with Variables ===\n");
+        System.out.println("Using variable: soapUrl = https://www.dataaccess.com/webservicesserver\n");
 
         String soapEnvelope = """
             <?xml version="1.0" encoding="utf-8"?>
@@ -149,9 +127,10 @@ public class TestExecutionRunnerApplication {
             </soap:Envelope>
             """;
 
+        // Use ${soapUrl} variable in URL
         HttpRequestData request = new HttpRequestData(
             "POST",
-            "https://www.dataaccess.com/webservicesserver/numberconversion.wso",
+            "${soapUrl}/numberconversion.wso",
             Map.of(
                 "Content-Type", "text/xml; charset=utf-8",
                 "SOAPAction", "http://www.dataaccess.com/webservicesserver/NumberToWords"
@@ -163,16 +142,17 @@ public class TestExecutionRunnerApplication {
             new AssertionSpec("statusEquals", "", "200")
         );
 
+        // Pass soapUrl as a variable
         SoapRunRequest runRequest = new SoapRunRequest(
             "soap-test-1",
             request,
             assertions,
-            Map.of()
+            Map.of("soapUrl", "https://www.dataaccess.com/webservicesserver")
         );
 
         CountDownLatch latch = new CountDownLatch(1);
 
-        runnerService.submit(runRequest, result -> {
+        testExecutionPort.submit(runRequest, result -> {
             System.out.println("✓ SOAP Test Completed:");
             System.out.println("  Run ID: " + result.runId());
             System.out.println("  Status: " + result.status());
@@ -200,39 +180,71 @@ public class TestExecutionRunnerApplication {
     /**
      * Test E2E workflow execution with variable extraction and passing.
      */
-    private void testE2eWorkflowExecution(RunnerService runnerService) throws Exception {
-        System.out.println("=== Testing E2E Workflow Execution ===\n");
+    private void testE2eWorkflowExecution(TestExecutionPort testExecutionPort) throws Exception {
+        System.out.println("=== Testing E2E Workflow with Variable Extraction ===\n");
+        System.out.println("Initial variables:");
+        System.out.println("  baseUrl = https://jsonplaceholder.typicode.com");
+        System.out.println("  postId = 1");
+        System.out.println("\nWorkflow will:");
+        System.out.println("  1. Get post and extract userId");
+        System.out.println("  2. Use extracted userId to get user details and extract username, email, city");
+        System.out.println("  3. Use extracted userId to get user's todos\n");
 
-        // Step 1: Get a post
+        // Step 1: Get a post and extract userId
         E2eStepRequest step1 = new E2eStepRequest(
             "step-1",
-            "Get Post",
+            "Get Post by ID",
             1,
             "REST",
             new HttpRequestData(
                 "GET",
-                "https://jsonplaceholder.typicode.com/posts/1",
+                "${baseUrl}/posts/${postId}",
                 Map.of("Accept", "application/json"),
                 (byte[]) null
             ),
             List.of(
                 new AssertionSpec("statusEquals", "", "200"),
-                new AssertionSpec("jsonPathEquals", "$.id", "1")
+                new AssertionSpec("jsonPathEquals", "$.id", "1"),
+                new AssertionSpec("jsonPathEquals", "$.title", "sunt aut facere repellat provident occaecati excepturi optio reprehenderit")
             ),
             List.of(
-                new ExtractorSpec("userId", "JSON_PATH", "$.userId")
+                new ExtractorSpec("userId", "JSONPATH", "$.userId"),
+                new ExtractorSpec("postTitle", "JSONPATH", "$.title")
             )
         );
 
-        // Step 2: Get the user using extracted userId
+        // Step 2: Get the user using extracted userId and extract more details
         E2eStepRequest step2 = new E2eStepRequest(
             "step-2",
-            "Get User",
+            "Get User by Extracted ID",
             2,
             "REST",
             new HttpRequestData(
                 "GET",
-                "https://jsonplaceholder.typicode.com/users/${userId}",
+                "${baseUrl}/users/${userId}",
+                Map.of("Accept", "application/json"),
+                (byte[]) null
+            ),
+            List.of(
+                new AssertionSpec("statusEquals", "", "200"),
+                new AssertionSpec("jsonPathEquals", "$.username", "Bret")
+            ),
+            List.of(
+                new ExtractorSpec("username", "JSONPATH", "$.username"),
+                new ExtractorSpec("email", "JSONPATH", "$.email"),
+                new ExtractorSpec("city", "JSONPATH", "$.address.city")
+            )
+        );
+
+        // Step 3: Get user's todos using extracted userId
+        E2eStepRequest step3 = new E2eStepRequest(
+            "step-3",
+            "Get User's Todos",
+            3,
+            "REST",
+            new HttpRequestData(
+                "GET",
+                "${baseUrl}/todos?userId=${userId}",
                 Map.of("Accept", "application/json"),
                 (byte[]) null
             ),
@@ -240,19 +252,19 @@ public class TestExecutionRunnerApplication {
                 new AssertionSpec("statusEquals", "", "200")
             ),
             List.of(
-                new ExtractorSpec("username", "JSON_PATH", "$.username")
+                new ExtractorSpec("firstTodoTitle", "JSONPATH", "$[0].title")
             )
         );
 
-        // Step 3: Get user's todos using extracted userId
-        E2eStepRequest step3 = new E2eStepRequest(
-            "step-3",
-            "Get User Todos",
-            3,
+        // Step 4: Verify extracted variables by using them in a final request
+        E2eStepRequest step4 = new E2eStepRequest(
+            "step-4",
+            "Verify Extracted Data",
+            4,
             "REST",
             new HttpRequestData(
                 "GET",
-                "https://jsonplaceholder.typicode.com/todos?userId=${userId}",
+                "${baseUrl}/users/${userId}/posts",
                 Map.of("Accept", "application/json"),
                 (byte[]) null
             ),
@@ -264,43 +276,45 @@ public class TestExecutionRunnerApplication {
 
         E2eRunRequest runRequest = new E2eRunRequest(
             "e2e-test-1",
-            List.of(step1, step2, step3),
-            Map.of()
+            List.of(step1, step2, step3, step4),
+            Map.of(
+                "baseUrl", "https://jsonplaceholder.typicode.com",
+                "postId", "1"
+            )
         );
 
         CountDownLatch latch = new CountDownLatch(1);
 
-        runnerService.submit(runRequest, result -> {
+        testExecutionPort.submit(runRequest, result -> {
             System.out.println("✓ E2E Test Completed:");
             System.out.println("  Run ID: " + result.runId());
             System.out.println("  Status: " + result.status());
             System.out.println("  Duration: " + result.duration() + "ms");
 
             if (result instanceof E2eRunResult e2eResult) {
-                System.out.println("\n  Steps:");
+                System.out.println("\n  🔗 Execution Chain:");
                 for (StepResult stepResult : e2eResult.stepResults()) {
-                    System.out.println("    Step " + stepResult.stepOrder() + ": " + stepResult.stepName());
-                    System.out.println("      Status: " + stepResult.status());
-                    System.out.println("      Duration: " + stepResult.duration() + "ms");
-                    System.out.println("      Response Status: " + stepResult.response().statusCode());
+                    System.out.println("  ┌─ Step " + stepResult.stepOrder() + ": " + stepResult.stepName());
+                    System.out.println("  │  Status: " + stepResult.status() + " (" + stepResult.duration() + "ms)");
+                    System.out.println("  │  Response: HTTP " + stepResult.response().statusCode());
 
                     if (!stepResult.extractedVariables().isEmpty()) {
-                        System.out.println("      Extracted Variables:");
+                        System.out.println("  │  📦 Extracted:");
                         stepResult.extractedVariables().forEach((key, value) ->
-                            System.out.println("        " + key + " = " + value)
+                            System.out.println("  │     • " + key + " = " + value)
                         );
                     }
 
-                    System.out.println("      Assertions:");
+                    System.out.println("  │  ✓ Assertions:");
                     for (AssertionResult assertion : stepResult.assertionResults()) {
-                        System.out.println("        - " + (assertion.ok() ? "✓" : "✗") + " " + assertion.message());
+                        System.out.println("  │     " + (assertion.ok() ? "✓" : "✗") + " " + assertion.message());
                     }
-                    System.out.println();
+                    System.out.println("  └─");
                 }
 
-                System.out.println("  Final Variables:");
+                System.out.println("\n  📊 All Variables Available at End:");
                 e2eResult.finalVariables().forEach((key, value) ->
-                    System.out.println("    " + key + " = " + value)
+                    System.out.println("     • " + key + " = " + value)
                 );
             }
 

@@ -41,7 +41,13 @@ public class XPathAssertionValidator implements Validator {
                 String message = exists
                     ? "Path exists: " + assertion.expr()
                     : "Path does not exist: " + assertion.expr();
-                return new AssertionResult(assertion, exists, message);
+                return new AssertionResult(
+                    assertion.type(),
+                    exists,
+                    message,
+                    "exists",
+                    exists ? "found" : "not found"
+                );
             }
 
             // xpathEquals
@@ -50,10 +56,20 @@ public class XPathAssertionValidator implements Validator {
                 ? "Value matches: " + result
                 : "Expected " + assertion.expected() + " but got " + result;
 
-            return new AssertionResult(assertion, passed, message);
+            return new AssertionResult(
+                assertion.type(),
+                passed,
+                message,
+                assertion.expected(),
+                result
+            );
 
         } catch (Exception e) {
-            return new AssertionResult(assertion, false, "XPath error: " + e.getMessage());
+            return new AssertionResult(
+                assertion.type(),
+                false,
+                "XPath error: " + e.getMessage()
+            );
         }
     }
 }

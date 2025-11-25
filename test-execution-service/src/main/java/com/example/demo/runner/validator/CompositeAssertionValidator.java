@@ -36,7 +36,7 @@ public class CompositeAssertionValidator implements AssertionValidator {
 
             if (validator == null) {
                 results.add(new AssertionResult(
-                    assertion,
+                    assertion.type(),
                     false,
                     "Unknown assertion type: " + assertion.type()
                 ));
